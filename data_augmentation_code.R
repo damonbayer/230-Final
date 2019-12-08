@@ -40,3 +40,13 @@ colMeans(beta[(n_burnin+1):n_samp,])
 probit_model <- glm(y~X-1,family = binomial(link = "probit"))
 summary(probit_model)
 
+
+beta[(n_burnin+1):n_samp,] %>% 
+  as_tibble() %>% 
+  `colnames<-`(colnames(X)) %>% 
+  pivot_longer(cols = everything()) %>% 
+  ggplot(aes(x = value, fill = name)) +
+  facet_wrap(. ~ name, scales = "free") +
+  geom_density() +
+  theme_bw() +
+  theme(legend.position="none")
