@@ -1,16 +1,20 @@
 library(tidyverse)
 library(truncnorm)
 library(mvtnorm)
-dat <- read_csv("Data/breast-cancer-wisconsin.data", 
-                col_names = c("ID", "thick","uni_size",
-                              "uni_shape","adhesion",
-                              "single_size","nuclei",
-                              "chrom","nucleoli","mitoses",
-                              "class"))
-dat$nuclei <- as.numeric(dat$nuclei)
-dat$class <- as.factor(dat$class)
-X <- as.matrix(cbind(1,dat[,c(2:6,8:10)]))
-y <- dat$class
+
+cancer.dat <- read_csv(here("Data", "breast-cancer-wisconsin.data"),
+                       col_names = c('Sample code number',
+                                     'Clump Thickness',
+                                     'Uniformity of Cell Size',
+                                     'Uniformity of Cell Shape',
+                                     'Marginal Adhesion',
+                                     'Single Epithelial Cell Size',
+                                     'Bare Nuclei',
+                                     'Bland Chromatin',
+                                     'Normal Nucleoli',
+                                     'Mitoses',
+                                     'Class'), na = '?') %>% 
+  na.omit()
 
 generate_Z <- function(y,X,beta){
   if(y == 4){
