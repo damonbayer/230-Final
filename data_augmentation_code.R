@@ -57,7 +57,7 @@ colMeans(beta[(n_burnin+1):n_samp,])
 probit_model <- glm(y~X-1,family = binomial(link = "probit"))
 summary(probit_model)
 
-<<<<<<< Updated upstream
+
 
 beta[(n_burnin+1):n_samp,] %>% 
   as_tibble() %>% 
@@ -68,7 +68,7 @@ beta[(n_burnin+1):n_samp,] %>%
   geom_density() +
   theme_bw() +
   theme(legend.position="none")
-=======
+
 plot_dat <- data.frame(time = 1:nrow(beta[(n_burnin+1):n_samp,]),beta[(n_burnin+1):n_samp,])
 
 ggplot(data = plot_dat) + geom_line(aes(x=time,y=X3))
@@ -76,5 +76,3 @@ ggplot(data = plot_dat) + geom_line(aes(x=time,y=X3))
 
 
 
-
->>>>>>> Stashed changes
