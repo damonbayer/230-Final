@@ -1,6 +1,7 @@
 library(tidyverse)
 library(truncnorm)
 library(mvtnorm)
+<<<<<<< Updated upstream
 
 cancer.dat <- read_csv(here("Data", "breast-cancer-wisconsin.data"),
                        col_names = c('Sample code number',
@@ -15,6 +16,18 @@ cancer.dat <- read_csv(here("Data", "breast-cancer-wisconsin.data"),
                                      'Mitoses',
                                      'Class'), na = '?') %>% 
   na.omit()
+=======
+dat <- read_csv("Data/breast-cancer-wisconsin.data", 
+                col_names = c("ID", "thick","uni_size",
+                              "uni_shape","adhesion",
+                              "single_size","nuclei",
+                              "chrom","nucleoli","mitoses",
+                              "class"))
+dat$nuclei <- as.numeric(dat$nuclei)
+dat$class <- as.factor(dat$class)
+X <- as.matrix(cbind(1,dat[,c(2:6,8:10)]))
+y <- dat$class
+>>>>>>> Stashed changes
 
 generate_Z <- function(y,X,beta){
   if(y == 4){
@@ -44,6 +57,7 @@ colMeans(beta[(n_burnin+1):n_samp,])
 probit_model <- glm(y~X-1,family = binomial(link = "probit"))
 summary(probit_model)
 
+<<<<<<< Updated upstream
 
 beta[(n_burnin+1):n_samp,] %>% 
   as_tibble() %>% 
@@ -54,3 +68,13 @@ beta[(n_burnin+1):n_samp,] %>%
   geom_density() +
   theme_bw() +
   theme(legend.position="none")
+=======
+plot_dat <- data.frame(time = 1:nrow(beta[(n_burnin+1):n_samp,]),beta[(n_burnin+1):n_samp,])
+
+ggplot(data = plot_dat) + geom_line(aes(x=time,y=X3))
+
+
+
+
+
+>>>>>>> Stashed changes
