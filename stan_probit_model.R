@@ -42,7 +42,7 @@ set.seed(123456)
 options(mc.cores = parallel::detectCores())  ## local multicore CPUs
 dat = list(N=N, K=K, X=X,y=y)
 model.stan = stan_model(model_code=model_string)
-r = sampling(model.stan, dat,, chains = 4, iter = 4000, warmup =1500, thin = 10)
+r = sampling(model.stan, dat, chains = 4, iter = 4000, warmup =1500, thin = 10)
 summary(r)$summary
 
 
