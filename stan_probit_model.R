@@ -46,3 +46,8 @@ r = sampling(model.stan, dat,, chains = 4, iter = 4000, warmup =1500, thin = 10)
 summary(r)$summary
 
 
+library(brms)
+fit <- brm(class ~ thick+uni_size+uni_shape+adhesion+single_size+chrom+nucleoli+mitoses, 
+           data = data, family = binomial(link = "probit"))
+summary(fit)
+
