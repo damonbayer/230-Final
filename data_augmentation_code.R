@@ -1,78 +1,96 @@
 library(tidyverse)
+library(here)
+
 library(truncnorm)
 library(mvtnorm)
-<<<<<<< Updated upstream
 
-cancer.dat <- read_csv(here("Data", "breast-cancer-wisconsin.data"),
-                       col_names = c('Sample code number',
-                                     'Clump Thickness',
-                                     'Uniformity of Cell Size',
-                                     'Uniformity of Cell Shape',
-                                     'Marginal Adhesion',
-                                     'Single Epithelial Cell Size',
-                                     'Bare Nuclei',
-                                     'Bland Chromatin',
-                                     'Normal Nucleoli',
-                                     'Mitoses',
-                                     'Class'), na = '?') %>% 
-  na.omit()
-=======
-dat <- read_csv("Data/breast-cancer-wisconsin.data", 
-                col_names = c("ID", "thick","uni_size",
-                              "uni_shape","adhesion",
-                              "single_size","nuclei",
-                              "chrom","nucleoli","mitoses",
-                              "class"))
-dat$nuclei <- as.numeric(dat$nuclei)
-dat$class <- as.factor(dat$class)
-X <- as.matrix(cbind(1,dat[,c(2:6,8:10)]))
-y <- dat$class
->>>>>>> Stashed changes
+dat <- read_csv(here("Data", "breast-cancer-wisconsin.data"),
+                col_names = c('Sample code number',
+                              'Clump Thickness',
+                              'Uniformity of Cell Size',
+                              'Uniformity of Cell Shape',
+                              'Marginal Adhesion',
+                              'Single Epithelial Cell Size',
+                              'Bare Nuclei',
+                              'Bland Chromatin',
+                              'Normal Nucleoli',
+                              'Mitoses',
+                              'Class'), na = '?') %>% 
+  na.omit() %>% 
+  select(-'Sample code number') %>% 
+  mutate(Class = Class / 2 - 1)
 
-generate_Z <- function(y,X,beta){
-  if(y == 4){
-    Z <- rtruncnorm(1,a=0,mean = X %*% beta,sd=1)
-  } 
-  if(y == 2){
-    Z <- rtruncnorm(1,b=0,mean = X %*% beta,sd=1)
+X <- model.matrix(Class ~ ., data = dat)
+y <- dat$Class
+
+n <- nrow(X)
+p <- ncol(X)
+
+generate_Z <- function(y, X, beta) {
+  n <- length(y)
+  mu <- X %*% beta
+  
+  z <- rep(NA, n)
+  
+  z[y == 0] <- rtruncnorm(n = 1,
+                          b = 0,
+                          mean = mu[y == 0],
+                          sd=1)
+  
+  z[y == 1] <- rtruncnorm(n = 1,
+                          a = 0,
+                          mean = mu[y == 1],
+                          sd = 1)
+  
+  z
   }
-  return(Z)
-}
 
 n_samp <- 5000
 n_burnin <- 1000
 
-beta <- matrix(NA,nrow = n_samp, ncol = ncol(X))
-beta[1,] <- rmvnorm(1,rep(0,ncol(X)))
-Z <- unlist(lapply(1:nrow(X), function(k){generate_Z(y[k],X[k,],beta[1,])}))
+beta <- matrix(NA, nrow = n_samp, ncol = p, dimnames = list(NULL, colnames(X)))
+beta[1,] <- rnorm(p)
+
+dat_z <- dat %>%
+  select(-y) %>%
+  mutate(z = generate_Z(y, X, beta[1,]))
+
+sigma <- solve(t(X) %*% X)
 
 for (i in 2:n_samp){
-  beta_z <- lm(Z~X-1)$coeff
-  sigma <- solve(t(X) %*% X)
-  beta[i,] <- rmvnorm(1,mean=beta_z,sigma=sigma)
-  Z <- unlist(lapply(1:nrow(X), function(k){generate_Z(y[k],X[k,],beta[i,])}))
+  beta_z <- lm(z ~ ., data = dat_z)$coeff
+  beta[i,] <- rmvnorm(n = 1, mean = beta_z, sigma = sigma)
+  dat$z <- generate_Z(y, X, beta[i,])
 }
-colMeans(beta[(n_burnin+1):n_samp,])
 
-probit_model <- glm(y~X-1,family = binomial(link = "probit"))
+# Throw away burn-in
+beta_post <- beta[(n_burnin+1):n_samp,]
+
+colMeans(beta_post)
+
+probit_model <- glm(Class ~ ., family = binomial(link = "probit"), data = dat)
+logit_model <- glm(Class ~ ., family = "binomial", data = dat)
+
 summary(probit_model)
 
-
-
-beta[(n_burnin+1):n_samp,] %>% 
+beta_post %>% 
   as_tibble() %>% 
-  `colnames<-`(colnames(X)) %>% 
   pivot_longer(cols = everything()) %>% 
   ggplot(aes(x = value, fill = name)) +
   facet_wrap(. ~ name, scales = "free") +
   geom_density() +
   theme_bw() +
-  theme(legend.position="none")
+  theme(legend.position="none") + 
+  ggtitle("Posterior Distributions")
 
-plot_dat <- data.frame(time = 1:nrow(beta[(n_burnin+1):n_samp,]),beta[(n_burnin+1):n_samp,])
-
-ggplot(data = plot_dat) + geom_line(aes(x=time,y=X3))
-
-
-
-
+beta_post %>% 
+  as_tibble() %>% 
+  pivot_longer(cols = everything()) %>% 
+  group_by(name) %>% 
+  mutate(t = row_number()) %>% 
+  ggplot(aes(x = t, y = value, color = name)) +
+  facet_wrap(. ~ name, scales = "free") +
+  geom_line() +
+  theme_bw() +
+  theme(legend.position="none") +
+  ggtitle("Trace Plot")
