@@ -1,6 +1,5 @@
 library(tidyverse)
 library(here)
-
 library(truncnorm)
 library(mvtnorm)
 
@@ -20,7 +19,7 @@ dat <- read_csv(here("Data", "breast-cancer-wisconsin.data"),
   select(-'Sample code number') %>% 
   mutate(Class = Class / 2 - 1)
 
-X <- model.matrix(Class ~ ., data = dat)
+X <- model_matrix(Class ~ ., data = dat)
 y <- dat$Class
 
 n <- nrow(X)
@@ -64,7 +63,8 @@ for (i in 2:n_samp){
 }
 
 # Throw away burn-in
-beta_post <- beta[(n_burnin+1):n_samp,]
+beta_post <- beta[(n_burnin+1):n_samp,] %>% 
+  as_tibble()
 
 colMeans(beta_post)
 
@@ -77,7 +77,7 @@ beta_post %>%
   as_tibble() %>% 
   pivot_longer(cols = everything()) %>% 
   ggplot(aes(x = value, fill = name)) +
-  facet_wrap(. ~ name, scales = "free") +
+  facet_wrap(. ~ name, scales = "free", labeller = label_parsed) +
   geom_density() +
   theme_bw() +
   theme(legend.position="none") + 
@@ -89,7 +89,7 @@ beta_post %>%
   group_by(name) %>% 
   mutate(t = row_number()) %>% 
   ggplot(aes(x = t, y = value, color = name)) +
-  facet_wrap(. ~ name, scales = "free") +
+  facet_wrap(. ~ name, scales = "free", labeller = label_parsed) +
   geom_line() +
   theme_bw() +
   theme(legend.position="none") +
