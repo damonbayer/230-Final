@@ -48,7 +48,7 @@ n_samp <- 5000
 n_burnin <- 1000
 
 beta <- matrix(NA, nrow = n_samp, ncol = p, dimnames = list(NULL, colnames(X)))
-
+set.seed(230)
 beta[1,] <- rnorm(p)
 
 dat_z <- dat %>%
