@@ -48,6 +48,7 @@ n_samp <- 5000
 n_burnin <- 1000
 
 beta <- matrix(NA, nrow = n_samp, ncol = p, dimnames = list(NULL, colnames(X)))
+
 beta[1,] <- rnorm(p)
 
 dat_z <- dat %>%
@@ -59,7 +60,7 @@ sigma <- solve(t(X) %*% X)
 for (i in 2:n_samp){
   beta_z <- lm(z ~ ., data = dat_z)$coeff
   beta[i,] <- rmvnorm(n = 1, mean = beta_z, sigma = sigma)
-  dat$z <- generate_Z(y, X, beta[i,])
+  dat_z$z <- generate_Z(y, X, beta[i,])
 }
 
 # Throw away burn-in
