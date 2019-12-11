@@ -42,9 +42,9 @@ set.seed(123456)
 options(mc.cores = parallel::detectCores())  ## local multicore CPUs
 dat = list(N=N, K=K, X=X,y=y)
 model.stan = stan_model(model_code=model_string)
-r = sampling(model.stan, dat, chains = 6, iter = 10000, warmup =2000, thin = 100)
+r = sampling(model.stan, dat, chains = 6, iter = 10000, warmup =2000, thin = 100, init = "0")
 write_rds(x = r, path = "~/Documents/STATS 230/230-Final/stan_samples.rds")
-summary(r)
+summary(r)$summary
 
 
 library(brms)
