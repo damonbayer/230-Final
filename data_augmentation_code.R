@@ -19,7 +19,7 @@ dat <- read_csv(here("Data", "breast-cancer-wisconsin.data"),
   select(-'Sample code number') %>% 
   mutate(Class = Class / 2 - 1)
 
-X <- model_matrix(Class ~ ., data = dat)
+X <- model.matrix(Class ~ ., data = dat)
 y <- dat$Class
 
 n <- nrow(X)
@@ -51,7 +51,7 @@ beta <- matrix(NA, nrow = n_samp, ncol = p, dimnames = list(NULL, colnames(X)))
 beta[1,] <- rnorm(p)
 
 dat_z <- dat %>%
-  select(-y) %>%
+  select(-Class) %>%
   mutate(z = generate_Z(y, X, beta[1,]))
 
 sigma <- solve(t(X) %*% X)
