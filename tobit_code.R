@@ -85,10 +85,11 @@ c_function <- function(nu){
 }
 
 
-generate_nu <- function(lambda, nu_choices){
-  prior <- rep(1/length(nu_choices),length(nu_choices))
-  lik <- c_function(nu_choices) * prod(lambda)^((nu_choices/2)-1) * exp(-(nu_choices/2)*sum(lambda))
-  post <- prior * lik
+generate_nu <- function(lambda, nu_choices,n){
+  prior <- log(rep(1/length(nu_choices),length(nu_choices)))
+  lik <- n*log(c_function(nu_choices)) + ((nu_choices/2)-1)*sum(log(lambda)) - (nu*sum(lambda))/2
+  post <- prior + lik
+  exp(post)
   ##still need to sample from post
 }
 
