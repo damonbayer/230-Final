@@ -61,7 +61,7 @@ augmented_data <- dat %>%
 
 set.seed(230)
 nu_choices <- c(4,8,16,32)
-nu <- 10
+nu <- 8
 
 for (i in 2:n_samp){
   #generate z
