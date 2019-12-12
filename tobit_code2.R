@@ -74,8 +74,8 @@ for (i in 2:n_samp){
   beta[i,] <- rmvnorm(n = 1, mean = beta_z, sigma = sigma)
   # new lambda
   shape <- (nu + 1)/2
-  rate <- c(2/(nu + (augmented_data$z - X %*% beta[i,])^2))
-  augmented_data$lambda <- rgamma(n, shape = shape, rate = rate)
+  rate <- 2/(nu + (augmented_data$z - X %*% beta[i,])^2)
+  augmented_data$lambda <- rgamma(n, shape = shape, scale = 1/rate)
   # nu[i] <- generate_nu(augmented_data$lambda, nu_choices)
 }
 
