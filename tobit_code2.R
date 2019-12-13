@@ -97,7 +97,6 @@ beta_post <- beta[(n_burnin+1):n_samp,] %>%
 
 
 beta_post %>% 
-  as_tibble() %>% 
   pivot_longer(cols = everything()) %>% 
   ggplot(aes(x = value, fill = name)) +
   facet_wrap(. ~ name, scales = "free", labeller = label_parsed) +
@@ -107,7 +106,6 @@ beta_post %>%
   ggtitle("Posterior Distributions")
 
 beta_post %>% 
-  as_tibble() %>% 
   pivot_longer(cols = everything()) %>% 
   group_by(name) %>% 
   mutate(t = row_number()) %>% 
