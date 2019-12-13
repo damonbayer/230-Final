@@ -16,6 +16,18 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(here)
 source(here("plotting_functions.R"))
+
+post_sample_summary <- function(post) {
+  post %>% 
+  pivot_longer(everything()) %>% 
+  rename(Variable = name) %>% 
+  group_by(Variable) %>% 
+  summarize_all(list(mean = mean,
+                     sd = sd,
+                     "2.5%" = function(x) quantile(x, probs = 0.025),
+                     "50%" = median,
+                     "97.5%" = function(x) quantile(x, probs = 0.975)))
+}
 ```
 
 # Abstract
@@ -37,15 +49,19 @@ Here's the methodology.
 # Results
 <!-- (applying your algorithm to simulated or real data) -->
 
+For three datasets, we apply the appropriate previously discussed model as well as standard maximum likelihood estimation and custom models written in Stan [@mcstan] and impelemented in the RStan package [@rstan].
+
 Here's the results.
 
-## Ordered Multinomial
+## Small-cell Carcinoma
 
 ```{r Ordered Multinomial,echo=FALSE}
 ordered_multinomial_post <- read_rds(here("ordered_multinomial.rds"))
 
-dist_plot(ordered_multinomial_post)
+post_sample_summary(ordered_multinomial_post)
+
 trace_plot(ordered_multinomial_post)
+dist_plot(ordered_multinomial_post)
 ```
 
 
