@@ -3,12 +3,15 @@ library(here)
 library(mvtnorm)
 library(truncnorm)
 
+
+# Setup -------------------------------------------------------------------
 dat <- read.table(here("Data", "carcin.txt")) %>% 
   as_tibble() %>% 
   mutate(outcome = as_factor(outcome))
 
 y <- dat$outcome
 X <- model.matrix(outcome ~ female + treatment - 1, data = dat)
+xtx_inv <- solve(t(X) %*% X)
 
 n <- nrow(X)
 p <- ncol(X)
@@ -16,18 +19,13 @@ p <- ncol(X)
 J <- nlevels(y)
 
 n_samp <- 5000
-n_burnin <- 1000
+n_burnin <- 2000
 
 betas <- matrix(NA, nrow = n_samp, ncol = p, dimnames = list(NULL, colnames(X)))
 gammas <- matrix(NA, nrow = n_samp, ncol = J + 1, dimnames = list(NULL, str_c("gamma[", 0:J, "]")))
 
-# Initialize with mle
-mle_est <- MASS::polr(factor(outcome) ~ female + treatment, data = dat, weights = count, method = "probit")
-betas[1,] <- mle_est$coefficients
-gammas[1,] <- c(-Inf, mle_est$zeta, Inf)
 
-xtx_inv <- solve(t(X) %*% X)
-
+# Function Definitions ----------------------------------------------------
 sample_Z <- function(X, y, beta_current, gamma_current) {
   n <- length(y)
   J <- nlevels(y)
@@ -63,43 +61,35 @@ sample_gamma <- function(z, y, gamma_current) {
   gamma
 }
 
+# Initialization ----------------------------------------------------------
+mle_est <- MASS::polr(factor(outcome) ~ female + treatment, data = dat, weights = count, method = "probit")
+betas[1,] <- mle_est$coefficients
+gammas[1,] <- c(-Inf, mle_est$zeta, Inf)
+set.seed(230)
+z <- sample_Z(X, y, betas[1,], gammas[1,])
+
+
+# Gibbs Sampling ----------------------------------------------------------
+set.seed(230)
 for (i in 2:n_samp) {
-  z <- sample_Z(X, y, betas[i-1,], gammas[i-1,])
-  gammas[i, ] <- sample_gamma(z, y, gammas[i-1, ])
-  betas[i, ] <- rmvnorm(n = 1, as.vector(xtx_inv %*% t(X) %*% z), sigma = xtx_inv)  
+  gammas[i, ] <- sample_gamma(z, y, gammas[i-1, ]) # Equation 18
+  z <- sample_Z(X, y, betas[i-1,], gammas[i,]) # Equation 17
+  betas[i, ] <- rmvnorm(n = 1,
+                        mean = as.vector(xtx_inv %*% t(X) %*% z),
+                        sigma = xtx_inv)  # Equation 5
 }
 
-trace_plot <- function(data) {
-  data %>% 
-    pivot_longer(cols = everything()) %>% 
-    group_by(name) %>% 
-    mutate(t = row_number()) %>% 
-    ggplot(aes(x = t, y = value, color = name)) +
-    facet_wrap(. ~ name, scales = "free", labeller = label_parsed) +
-    geom_line() +
-    theme_bw() +
-    theme(legend.position="none") +
-    ggtitle("Trace Plot")
-  
-}
 
-dist_plot <- function(data) {
-  data %>% 
-    pivot_longer(cols = everything()) %>% 
-    ggplot(aes(x = value, fill = name)) +
-    facet_wrap(. ~ name, scales = "free", labeller = label_parsed) +
-    geom_density() +
-    theme_bw() +
-    theme(legend.position="none") + 
-    ggtitle("Posterior Distributions")  
-}
-
+# Post processing ---------------------------------------------------------
 vars_post <- cbind(betas[(n_burnin+1):n_samp,],
                    gammas[(n_burnin+1):n_samp,2:J]) %>% 
   as_tibble()
 
+write_rds(vars_post, path = here("ordered_multinomial.rds"))
+
+
+# Analysis ----------------------------------------------------------------
 colMeans(vars_post)
+source(here("plotting_functions.R"))
 trace_plot(vars_post)
 dist_plot(vars_post)
-
-# TODO: Preductions
