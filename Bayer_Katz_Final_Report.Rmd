@@ -54,8 +54,13 @@ trace_plot(ordered_multinomial_post)
 
 Here's the discussion.
 
+\pagebreak
+
 # References
 
+::: {#refs}
+:::
 
+\pagebreak
 
 # Appendix
