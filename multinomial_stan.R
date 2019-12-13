@@ -3,7 +3,7 @@ library(here)
 library(rstan)
 rstan_options(auto_write = TRUE)
 
-
+#Setup model string ------------------------------------------------
 model_string <- '
   data {
   int<lower=2> K;
@@ -30,7 +30,7 @@ model {
 }'
 
 
-
+# Data Setup ------------------------------------------------
 dat <- read.table(here("Data", "carcin.txt")) %>% 
   as_tibble() %>% 
   mutate(outcome = as_factor(outcome))
@@ -43,7 +43,7 @@ D <- ncol(X)
 K <- nlevels(y)
 
 
-
+#STAN setup and sampling ------------------------------------------------
 set.seed(123456)
 options(mc.cores = parallel::detectCores())  ## local multicore CPUs
 dat2 = list(N=N, D = D, K=K, X=X,y=y)
