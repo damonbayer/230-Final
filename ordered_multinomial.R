@@ -103,3 +103,5 @@ vars_post <- cbind(betas[(n_burnin+1):n_samp,],
 colMeans(vars_post)
 trace_plot(vars_post)
 dist_plot(vars_post)
+
+# TODO: Preductions
