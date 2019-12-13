@@ -25,7 +25,7 @@ dat <- read_csv(here("Data", "breast-cancer-wisconsin.data"),
   select(-'Sample code number') %>% 
   mutate(Class = Class / 2 - 1)
 
-dat <- sample_n(dat, 20)
+# dat <- sample_n(dat, 20)
 
 X <- model.matrix(Class ~ ., data = dat)
 y <- dat$Class
@@ -58,8 +58,8 @@ c_func <- function(nu)   1 / (gamma(nu / 2) * (nu / 2)^(nu / 2))
 n_samp <- 6000
 n_burnin <- 4000
 
-nu_choices <- c(4, 8, 16, 32)
-# nu_choices <- 10000
+# nu_choices <- c(4, 8, 16, 32)
+nu_choices <- 10^(2:5)
 nu_prior <- rep(1 / length(nu_choices), length(nu_choices))
 
 beta <- matrix(NA, nrow = n_samp, ncol = p, dimnames = list(NULL, colnames(X)))
@@ -67,7 +67,7 @@ nu <- rep(NA, n_samp)
 
 
 beta[1,] <- glm(Class ~ ., family = binomial(link = "probit"), data = dat)$coeff
-nu[1] <- sample(x = nu_choices, size = 1, prob = nu_prior)
+nu[1] <- nu_choices[sample(x = length(nu_choices), size = 1, prob = nu_prior)]
 # nu[1] <- nu_choices[1]
 
 augmented_data <- dat %>%
@@ -103,7 +103,8 @@ for (i in 2:n_samp){
   
   post_normalized <- exp(log_pos_unnormal - log_sum_exp(log_pos_unnormal))
   
-  nu[i] <- sample(x = nu_choices, size = 1, prob = post_normalized)
+  nu[i] <- nu_choices[sample(x = length(nu_choices), size = 1, prob = post_normalized)]
+  # nu[i] <- nu[i-1]
 }
 
 beta_post <- beta[(n_burnin+1):n_samp,] %>% 
@@ -141,3 +142,5 @@ probit_model <- glm(Class ~ ., family = binomial(link = "probit"), data = dat)
 probit_model$coefficients
 colMeans(beta_post)
 apply(beta_post, MARGIN = 2, median)
+
+table(nu)
