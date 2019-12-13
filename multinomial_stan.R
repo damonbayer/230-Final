@@ -1,3 +1,9 @@
+library(tidyverse)
+library(here)
+library(rstan)
+rstan_options(auto_write = TRUE)
+
+
 model_string <- '
   data {
   int<lower=2> K;
