@@ -1,6 +1,7 @@
 library(tidyverse)
 library(here)
 library(mvtnorm)
+library(truncnorm)
 
 dat <- read.table(here("Data", "carcin.txt")) %>% 
   as_tibble() %>% 
@@ -67,9 +68,6 @@ for (i in 2:n_samp) {
   gammas[i, ] <- sample_gamma(z, y, gammas[i-1, ])
   betas[i, ] <- rmvnorm(n = 1, as.vector(xtx_inv %*% t(X) %*% z), sigma = xtx_inv)  
 }
-
-
-
 
 trace_plot <- function(data) {
   data %>% 
