@@ -1,30 +1,61 @@
 ---
-title: "STAT 230 Final Report"
+title: "Gibbs Sampling with Data Augmentation for Bayesian Analysis of Binary and Polychotomous Response Data"
+subtitle: "STAT 230 Final Report"
 author: "Damon Bayer & Corey Katz"
-date: "11/22/2019"
-output: pdf_document
+date: "12/16/2019"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 2
+    number_sections: true
+bibliography: references.bib
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(here)
+source(here("plotting_functions.R"))
 ```
 
-## R Markdown
+# Abstract
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+Here's the abstract.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+# Introduction
+<!-- (explaining the motivation behind the new algorithm) -->
 
-```{r cars}
-summary(cars)
+We cite @albertchib93
+
+Here's the introduction.
+
+# Methodology
+<!-- (explaining the algorithm), -->
+
+Here's the methodology.
+
+# Results
+<!-- (applying your algorithm to simulated or real data) -->
+
+Here's the results.
+
+## Ordered Multinomial
+
+```{r Ordered Multinomial,echo=FALSE}
+ordered_multinomial_post <- read_rds(here("ordered_multinomial.rds"))
+
+dist_plot(ordered_multinomial_post)
+trace_plot(ordered_multinomial_post)
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
+# Discussion
+<!-- (shortcomings of this new algorithm and how it can be improved). -->
 
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
+Here's the discussion.
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+# References
+
+
+
+# Appendix
