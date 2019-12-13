@@ -8,6 +8,7 @@ output:
     toc: true
     toc_depth: 2
     number_sections: true
+    df_print: kable
 bibliography: references.bib
 ---
 
