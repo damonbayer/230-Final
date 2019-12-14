@@ -9,6 +9,8 @@ output:
     toc_depth: 2
     number_sections: true
     df_print: kable
+header-includes:
+  - \usepackage[linesnumbered,lined,boxed,commentsnumbered]{algorithm2e}
 bibliography: references.bib
 ---
 
@@ -49,7 +51,68 @@ Here's the introduction.
 # Methodology
 <!-- (explaining the algorithm), -->
 
-Here's the methodology.
+In this paper, we implement data augmentation Gibbs sampling for probit regression, multinomial probit of ordered data, and an extension of the probit model, the t-link model which were introduced by Albert and Chib (1993). In this section we will detail the methods and provide the algorithms for each. 
+
+## Profit Model: 
+
+The first model that data augmentation can be used to find posterior distributions is the profit model. The following is a standard Bayesian Probit model with non informative priors on the regression coefficients: 
+
+$$y_i| \pi_{i},\vec{\beta}, \vec x_i \sim Bernoulli(\pi_{i})  \ \ \ \text{for} \ \  i = 0,...,n$$
+$$ \Phi(\pi_{i}) = x_i^T\beta$$
+$$\beta_j \sim N(0, 100),  \ \ \ \text{for} \  j = 0,...,p$$
+
+Note that $\Phi$ is the cumulative density function of the normal distribution. 
+
+The idea of data augmentation is to introduce a continuous latent variable derived from a binary response in order to make sampling from the posterior distributions of the profit model coefficients easier. By introducing independent latent variables $Z_1, ... Z_n$, we can now find the joint posterior of $\vec \beta$ and $\vec Z$ given Y. We can then marginalize over the posterior distribution of $\vec Z|\vec Y$ and thus we have the conditional posterior of $\beta|\vec{Z},\vec{Y}$. This method is further simplified if we assume (as we did above) non-informative priors on the regression coefficients, $\vec \beta$. 
+
+With this approach we are able to create a Gibbs sampler that only needs to sample from truncated normal distributions and multivariate normal distribution, which are extremely easy with today's computing power. Based on the fully conditonal posterior of $\beta|\vec{Z},\vec{Y}$, Albert and Chib equated this method of profit regression on binary Y to doing linear regression on the latent variable Z. This will be evident in the algortim as we use the `lm` function to find the mean of the posterior distribution of $\beta|\vec{Z},\vec{Y}$. 
+
+## Algorithm: 
+
+\begin{algorithm}[H]
+\caption{Probit Regression Using Gibbs Sampler with Data Augmentation}
+\DontPrintSemicolon
+\SetAlgoLined
+\SetKwInOut{Input}{Input}\SetKwInOut{Output}{Output}
+\Input{$\vec{Y}$,$\textbf{X}$}
+\Output{Posterior Samples of Regression Coeffiecents, $\vec \beta$}
+\BlankLine
+Set Number of Samples (Total ($N_s$) and Burn-in) 
+Initailize $\vec \beta^{(0)}$ \\
+Set $\Sigma = (X^TX)^{-1}$
+n = Number of Observations
+\BlankLine
+\For{k = 1 to $N_s$}{
+  \For{i = 1 to n}{
+    \eIf{$y_i$ = 1}{
+        Sample $z_i^{(k)}$ from trunc$\mathcal{N}$($x_i^T\beta^{(k-1)}$,1,0,$\infty$)\;
+    }{
+        Sample $z_i^{(k)}$ from trunc$\mathcal{N}$($x_i^T\beta^{(k-1)}$,1,$-\infty$,0)\;
+    }
+  }
+  Regress $\vec Z$ onto $\textbf{X}$ to find $\vec \beta_Z$ \\
+  Sample $\beta^{(k)}|\vec Z$ from $\mathcal{N}(\hat{\vec \beta_Z}^{(k)}, \textbf{$\Sigma$})$
+  
+  
+}
+\end{algorithm}
+  
+T-link:
+
+The T-link is an extension of the above model, which allows use to use the t-distribution as our link function instead of the normal distribution. By generalizing the model, we can now choose a distribution that better fits out model. Usually, we are concerned with logistic regression because of the interpretability of this particular model. The flexibility of the t-link function allows us to draw from a posterior distribution of $\vec \beta$ that is approximately the posterior distribution if we had chosen to use the logit link function. According to Albert and Chib, a t-distribution with a degrees of freedom of 8 is a fairly close approximation of the logistic regression model.
+
+To implement this link function, we must introduce a second set of latent variables, $\lambda_i$.The details of this method can be found in the algortihm.  
+Description:
+
+Algorithm:
+
+
+Multinomial:
+
+Description
+
+Algorithm.
+
 
 # Results
 <!-- (applying your algorithm to simulated or real data) -->
