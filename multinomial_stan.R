@@ -48,7 +48,7 @@ set.seed(123456)
 options(mc.cores = parallel::detectCores())  ## local multicore CPUs
 dat2 = list(N=N, D = D, K=K, x=X,y=y)
 model.stan = stan_model(model_code=model_string)
-r= sampling(model.stan, dat2, chains = 4, iter = 4000, warmup =1000, init = "0")
+r= sampling(model.stan, dat2, chains = 1, iter = 4000, warmup =1000, init = "0")
 write_rds(x = r, path = "~/Documents/STATS 230/230-Final/stan_samples_mp.rds")
 
 samples <- as.matrix(r)[,-6]
