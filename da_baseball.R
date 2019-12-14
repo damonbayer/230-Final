@@ -71,9 +71,9 @@ colMeans(beta_post)
 probit_model <- glm(is_in_play ~ ., family = binomial(link = "probit"), data = dat)
 summary(probit_model)
 
-write_rds(beta_post,"~/Documents/STATS 230/230-Final/baseball_betas_new.rds")
+write_rds(beta_post,here("baseball_samples.rds"))
 # Analysis ----------------------------------------------------------------
-load("~/Documents/STATS 230/230-Final/baseball_betas_new.rds")
+temp <- readRDS((here("baseball_samples.rds")))
 source(here("plotting_functions.R"))
 trace_plot(beta_post)
 dist_plot(beta_post)
