@@ -54,7 +54,17 @@ For three datasets, we apply the appropriate previously discussed model as well 
 
 Here's the results.
 
-## Small-cell Carcinoma
+## Small-Cell Carcinoma
+
+<!-- The small-cell carcinoma data comes from our STAT 211 class. Small-cell carcinoma of the lung is an aggressive cancer, but does respond to chemotherapy -->
+
+
+<!-- 􏰀 Astudywasperformedinwhichpatientswererandomizedto receive a sequential therapy, with the same drug combination in each cycle, or an alternating therapy, with three different combinations given in alternating cycles -->
+<!-- 􏰀 Attheendoftreatment,tumorresponsewascategorizedas: 1. Progressive -->
+<!-- 2. No change -->
+<!-- 3. Partial remission -->
+<!-- 4. Complete remission -->
+<!-- 􏰀 Thedataareorganizedbytherapygroupandbysex,withcounts in each of 4 ordered categories -->
 
 ```{r Ordered Multinomial,echo=FALSE}
 ordered_multinomial_post <- read_rds(here("ordered_multinomial.rds"))
@@ -64,6 +74,20 @@ post_sample_summary(ordered_multinomial_post)
 trace_plot(ordered_multinomial_post)
 dist_plot(ordered_multinomial_post)
 ```
+
+
+
+## Baseball
+
+
+## Breast Cancer Data
+
+We evaluate the probit regression methods on the Wisconsin Breast Cancer dataset, obtained from the University of Wisconsin Hospitals, Madison from Dr. William H. Wolberg \cite{wolberg1990multisurface}. The data reports 9 discrete measurements for 699 observations of clumps of breast cancer cells. The variables are Clump Thickness, Uniformity of Cell Size, Uniformity of Cell Shape, Marginal Adhesion, Single Epithelial Cell Size, Bare Nuclei, Bland Chromatin, Normal Nucleoli, and Mitoses. We remove 16 missing observations from the dataset to arrive at a final dataset with $n = 683$, $p = 9$.
+
+
+
+Stan: 5000 iteration, 1000 burn in, 4000 posterior samples, 29.4429 sec
+R: 8.235 seconds
 
 
 # Discussion
