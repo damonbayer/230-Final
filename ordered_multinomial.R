@@ -7,7 +7,8 @@ library(truncnorm)
 # Setup -------------------------------------------------------------------
 dat <- read.table(here("Data", "carcin.txt")) %>% 
   as_tibble() %>% 
-  mutate(outcome = as_factor(outcome))
+  mutate(outcome = as_factor(outcome)) %>%
+  uncount(count)
 
 y <- dat$outcome
 X <- model.matrix(outcome ~ female + treatment - 1, data = dat)
@@ -18,8 +19,8 @@ p <- ncol(X)
 
 J <- nlevels(y)
 
-n_samp <- 5000
-n_burnin <- 2000
+n_samp <- 4000
+n_burnin <- 1000
 
 betas <- matrix(NA, nrow = n_samp, ncol = p, dimnames = list(NULL, colnames(X)))
 gammas <- matrix(NA, nrow = n_samp, ncol = J + 1, dimnames = list(NULL, str_c("gamma[", 0:J, "]")))
@@ -62,7 +63,7 @@ sample_gamma <- function(z, y, gamma_current) {
 }
 
 # Initialization ----------------------------------------------------------
-mle_est <- MASS::polr(factor(outcome) ~ female + treatment, data = dat, weights = count, method = "probit")
+mle_est <- MASS::polr(factor(outcome) ~ female + treatment, data = dat, method = "probit")
 betas[1,] <- mle_est$coefficients
 gammas[1,] <- c(-Inf, mle_est$zeta, Inf)
 set.seed(230)
@@ -71,14 +72,16 @@ z <- sample_Z(X, y, betas[1,], gammas[1,])
 
 # Gibbs Sampling ----------------------------------------------------------
 set.seed(230)
+timer <- rbenchmark::benchmark(
 for (i in 2:n_samp) {
   gammas[i, ] <- sample_gamma(z, y, gammas[i-1, ]) # Equation 18
   z <- sample_Z(X, y, betas[i-1,], gammas[i,]) # Equation 17
   betas[i, ] <- rmvnorm(n = 1,
                         mean = as.vector(xtx_inv %*% t(X) %*% z),
                         sigma = xtx_inv)  # Equation 5
-}
+}, replications = 1)
 
+timer$elapsed
 
 # Post processing ---------------------------------------------------------
 vars_post <- cbind(betas[(n_burnin+1):n_samp,],
