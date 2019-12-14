@@ -52,11 +52,12 @@ sigma <- solve(t(X) %*% X)
 
 # Gibbs Sampling ---------------------------------------------------------
 set.seed(230)
+timer <- rbenchmark::benchmark(
 for (i in 2:n_samp){
   beta_z <- lm(z ~ ., data = dat_z)$coeff
   beta[i,] <- rmvnorm(n = 1, mean = beta_z, sigma = sigma)
   dat_z$z <- generate_Z(y, X, beta[i,])
-}
+}, replications = 1)
 
 
 
