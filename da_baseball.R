@@ -71,7 +71,7 @@ colMeans(beta_post)
 probit_model <- glm(is_in_play ~ ., family = binomial(link = "probit"), data = dat)
 summary(probit_model)
 
-
+write_csv(beta_post,"~/Documents/STATS 230/230-Final/baseball_betas.rds")
 # Analysis ----------------------------------------------------------------
 
 source(here("plotting_functions.R"))
