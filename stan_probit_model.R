@@ -22,7 +22,7 @@ model {
 '
 
 
-data <- read_csv("~/Documents/STATS 230/230-Final/Data/breast-cancer-wisconsin.data", 
+data <- read_csv(here("Data", "breast-cancer-wisconsin.data"),
                 col_names = c("ID", "thick","uni_size",
                               "uni_shape","adhesion",
                               "single_size","nuclei",
@@ -42,8 +42,8 @@ set.seed(123456)
 options(mc.cores = parallel::detectCores())  ## local multicore CPUs
 dat = list(N=N, K=K, X=X,y=y)
 model.stan = stan_model(model_code=model_string)
-r = sampling(model.stan, dat, chains = 1, iter = 5000, warmup =1000, init = "0")
-write_rds(x = r, path = "~/Documents/STATS 230/230-Final/stan_samples_bc.rds")
+r = sampling(model.stan, dat, chains = 1, iter = 4000, warmup =1000, init = "0")
+write_rds(x = r, path = here("stan_samples_bc.rds"))
 
 #load("~/Documents/STATS 230/230-Final/stan_samples.rds")
 summary(r)$summary

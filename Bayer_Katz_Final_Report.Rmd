@@ -13,14 +13,18 @@ bibliography: references.bib
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = F, cache=T)
 library(tidyverse)
 library(here)
+library(knitr)
 source(here("plotting_functions.R"))
+
+options(readr.num_columns = 0)
 
 post_sample_summary <- function(post) {
   post %>% 
-  pivot_longer(everything()) %>% 
+  pivot_longer(everything()) %>%
+  mutate(name = as_factor(name)) %>% 
   rename(Variable = name) %>% 
   group_by(Variable) %>% 
   summarize_all(list(mean = mean,
@@ -52,42 +56,154 @@ Here's the methodology.
 
 For three datasets, we apply the appropriate previously discussed model as well as standard maximum likelihood estimation and custom models written in Stan [@mcstan] and impelemented in the RStan package [@rstan].
 
-Here's the results.
-
 ## Small-Cell Carcinoma
 
-<!-- The small-cell carcinoma data comes from our STAT 211 class. Small-cell carcinoma of the lung is an aggressive cancer, but does respond to chemotherapy -->
+The small-cell carcinoma data comes from our STAT 211 class. Small-cell carcinoma of the lung is an aggressive cancer that can be treated with chemotherapy. Patients with small-cell carcinoma were randomly assigned to one of two therapy options. The outcome of the therapy is recorded on an ordinal scale (1: Progressive, 2: No Change, 3: Partial Remission, 4: Complete Remission). We fit multinomial ordered probit regression models with  with therapy option and sex as predictors of outcome. The model parameters are estimated with data augmented Gibbs sampling following the algorithm described in @albertchib93 and implemented in R, a custom model built in Stan, and traditional maximum likelihood estimation as implemented in the `polr` function in the MASS package [@MASS]. Both Bayesian methods are run to generate 4000 posterior samples, with the first 1000 discarded as burn-in samples, leaving 3000 samples for analysis. The Stan model took 1 minute and 13,9 seconds seconds to run, while the R model completed in 2.4 seconds.
+<!-- 73.8619 -->
+
+```{r Ordered Multinomial R}
+ssc_gibbs_post <- read_rds(here("ordered_multinomial.rds"))
+post_sample_summary(ssc_gibbs_post) %>% 
+  kable(caption = "Posterior sample summaries for small-cell carcinoma data using R-Gibbs")
+
+trace_plot(ssc_gibbs_post) + ggtitle("Posterior Trace (Small-Cell Carcinoma Using R-Gibbs)")
+dist_plot(ssc_gibbs_post) + ggtitle("Posterior Distribution (Small-Cell Carcinoma Using R-Gibbs)")
+```
+
+```{r Ordered Multinomial Stan}
+multinomial_stan_post <- read_rds(here("stan_samples_mp.rds")) %>% 
+  as.matrix() %>% 
+  as_tibble() %>% 
+  select(-lp__) %>% 
+  `colnames<-`(names(ssc_gibbs_post))
+  
+post_sample_summary(multinomial_stan_post) %>%
+  kable(caption = "Posterior sample summaries for small-cell carcinoma data using Stan")
+
+trace_plot(multinomial_stan_post) + ggtitle("Posterior Trace (Small-Cell Carcinoma Using Stan)")
+dist_plot(multinomial_stan_post) + ggtitle("Posterior Distribution (Small-Cell Carcinoma Using Stan)")
+```
+
+```{r Ordered Multinomial MLE}
+scc_dat <- read.table(here("Data", "carcin.txt")) %>% 
+  as_tibble() %>% 
+  mutate(outcome = as_factor(outcome)) %>%
+  uncount(count)
+
+multinomial_mle_est <- MASS::polr(factor(outcome) ~ female + treatment, data = scc_dat, method = "probit")
+
+suppressMessages(summary(multinomial_mle_est)) %>% 
+  `$`(coefficients) %>% 
+  as.data.frame() %>% 
+  rownames_to_column("Variable") %>% 
+  mutate(Variable = names(ssc_gibbs_post)) %>% 
+  select(-"t value") %>% 
+  rename(Estimate = Value) %>% 
+  kable(caption = "MLE estimates for small-cell carcinoma data")
+```
 
 
-<!-- 􏰀 Astudywasperformedinwhichpatientswererandomizedto receive a sequential therapy, with the same drug combination in each cycle, or an alternating therapy, with three different combinations given in alternating cycles -->
-<!-- 􏰀 Attheendoftreatment,tumorresponsewascategorizedas: 1. Progressive -->
-<!-- 2. No change -->
-<!-- 3. Partial remission -->
-<!-- 4. Complete remission -->
-<!-- 􏰀 Thedataareorganizedbytherapygroupandbysex,withcounts in each of 4 ordered categories -->
 
-```{r Ordered Multinomial,echo=FALSE}
-ordered_multinomial_post <- read_rds(here("ordered_multinomial.rds"))
+## Breast Cancer Data
 
-post_sample_summary(ordered_multinomial_post)
+We evaluate the probit regression methods with the Wisconsin Breast Cancer dataset, obtained from the University of Wisconsin Hospitals, Madison from Dr. William H. Wolberg [@wolberg1990multisurface]. The data reports 9 discrete measurements for 699 observations of clumps of breast cancer cells as well as the response variable, indicating whether or not the clump is malignant (1) or benign (0). The variables are Clump Thickness, Uniformity of Cell Size, Uniformity of Cell Shape, Marginal Adhesion, Single Epithelial Cell Size, Bare Nuclei, Bland Chromatin, Normal Nucleoli, and Mitoses. Only the Bare Nuclei variable included any missing data, so it was not included in this analysis. The model parameters are estimated with data-augmented Gibbs sampling following the algorithm described in @albertchib93 and implemented in R, a custom model built in Stan, and traditional maximum likelihood estimation as implemented in the `glm` function in R [@Rstats]. Both Bayesian methods are run to generate 4000 posterior samples, with the first 1000 discarded as burn-in samples, leaving 3000 samples for analysis. The Stan model took 6 minutes and 10.5 seconds seconds to run, while the R model completed in 7.8 seconds.
 
-trace_plot(ordered_multinomial_post)
-dist_plot(ordered_multinomial_post)
+<!-- 310.555 -->
+
+
+
+```{r Breast Cancer R}
+bc_gibbs_post <- read_rds(here("gibbs_samples_bc.rds"))
+post_sample_summary(bc_gibbs_post) %>% 
+  kable(caption = "Posterior sample summaries for breast cancer data using R-Gibbs")
+
+trace_plot(bc_gibbs_post) + ggtitle("Posterior Trace (Breast Cancer Using R-Gibbs)")
+dist_plot(bc_gibbs_post) + ggtitle("Posterior Distribution (Breast Cancer Using R-Gibbs)")
+```
+
+
+```{r Breast Cancer Stan}
+bc_stan_post <- read_rds(here("stan_samples_bc.rds")) %>% 
+  as.matrix() %>% 
+  as_tibble() %>% 
+  select(-lp__) %>% 
+  `colnames<-`(names(bc_gibbs_post))
+  
+post_sample_summary(bc_stan_post) %>%
+  kable(caption = "Posterior sample summaries for breast cancer data using Stan")
+
+trace_plot(bc_stan_post) + ggtitle("Posterior Trace (Breast Cancer Using Stan)")
+dist_plot(bc_stan_post) + ggtitle("Posterior Distribution (Breast Cancer Using Stan)")
+```
+
+
+```{r Breast Cancer MLE, warning=FALSE}
+dat_bc <- read_csv(here("Data", "breast-cancer-wisconsin.data"),
+                col_names = c('Sample code number',
+                              'Clump Thickness',
+                              'Uniformity of Cell Size',
+                              'Uniformity of Cell Shape',
+                              'Marginal Adhesion',
+                              'Single Epithelial Cell Size',
+                              'Bare Nuclei',
+                              'Bland Chromatin',
+                              'Normal Nucleoli',
+                              'Mitoses',
+                              'Class'), na = '?', ) %>% 
+  select(-'Sample code number') %>% 
+  select(-"Bare Nuclei") %>% 
+  mutate(Class = Class / 2 - 1)
+
+bc_mle_est <- glm(Class ~ ., family = binomial(link = "probit"), data = dat_bc)
+
+summary(bc_mle_est)$coefficients %>% 
+  as.data.frame() %>% 
+  rownames_to_column("Variable") %>% 
+  as_tibble() %>% 
+  select("Variable", "Estimate", "Std. Error") %>% 
+  kable(caption = "MLE estimates for breast cancer data")
 ```
 
 
 
 ## Baseball
 
+We evaluate the performance of data-augmented Gibbs sampling on a larger datasets (more predictors and observations than the breast cancer data), by fitting probit regression models on baseball data. The baseball data comes from Major League Baseball pitch tracking software and was prepared by the Los Angeles Dodgers for the purpose of predicting whether or not a pitch was put into play. There are 100,000 pitches (observations) thrown by Dodger's starting pitchers and 19 features of each pitch, including velocity, spin rate, and location. The binary response indiactes whether or not a pitch was put into play (0: not put into play, 1: put into play). Missing data was removed, leaving 99,254 observations with 18 covariates for analysis. The model parameters are estimated with data augmented Gibbs sampling following the algorithm described in @albertchib93 and implemented in R and traditional maximum likelihood estimation as implemented in the `glm` function in R [@Rstats]. Both Bayesian methods are run to generate 5000 posterior samples, with the first 1000 discarded as burn-in samples, leaving 4000 samples for analysis. We also attempted to fit a custom model in Stan but the samples were generated very slowly (fewer than 500 samples per hour). In contrast, the R model generated all 5000 samples in 15 miutes and 41 seconds.
 
-## Breast Cancer Data
+<!-- R: 941.138 -->
+<!-- Stan: started at 5:28 -->
 
-We evaluate the probit regression methods on the Wisconsin Breast Cancer dataset, obtained from the University of Wisconsin Hospitals, Madison from Dr. William H. Wolberg \cite{wolberg1990multisurface}. The data reports 9 discrete measurements for 699 observations of clumps of breast cancer cells. The variables are Clump Thickness, Uniformity of Cell Size, Uniformity of Cell Shape, Marginal Adhesion, Single Epithelial Cell Size, Bare Nuclei, Bland Chromatin, Normal Nucleoli, and Mitoses. We remove 16 missing observations from the dataset to arrive at a final dataset with $n = 683$, $p = 9$.
+```{r Baseball R, warning=FALSE}
+bb_gibbs_post <- read_rds(here("baseball_samples.rds"))
+post_sample_summary(bb_gibbs_post) %>% 
+  kable(caption = "Posterior sample summaries for baseball data using R-Gibbs")
 
+trace_plot(bb_gibbs_post) + ggtitle("Posterior Trace (Bawball Using R-Gibbs)")
+dist_plot(bb_gibbs_post) + ggtitle("Posterior Distribution (Baseball Using R-Gibbs)")
+```
 
+```{r Baseball Stan, warning=FALSE}
+# didn't happen
+```
 
-Stan: 5000 iteration, 1000 burn in, 4000 posterior samples, 29.4429 sec
-R: 8.235 seconds
+```{r Baseball MLE, warning=FALSE}
+dat_bb <- read_csv(here("Data", "LAD_assessment_data.csv"),
+                col_types = cols(batter_mlb_id = col_skip(), 
+                                 pitcher_mlb_id = col_skip(), 
+                                 venue_city = col_skip())) %>%
+  drop_na()
+
+bb_mle_est <- glm(is_in_play ~ ., family = binomial(link = "probit"), data = dat_bb)
+
+summary(bb_mle_est)$coefficients %>% 
+  as.data.frame() %>% 
+  rownames_to_column("Variable") %>% 
+  as_tibble() %>% 
+  select("Variable", "Estimate", "Std. Error") %>% 
+  kable(caption = "MLE estimates for baseball data")
+```
+<!-- There were 23 model parameters -->
+
 
 
 # Discussion

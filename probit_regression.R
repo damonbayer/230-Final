@@ -15,8 +15,8 @@ dat <- read_csv(here("Data", "breast-cancer-wisconsin.data"),
                               'Normal Nucleoli',
                               'Mitoses',
                               'Class'), na = '?') %>% 
-  na.omit() %>% 
   select(-'Sample code number') %>% 
+  select(-"Bare Nuclei") %>% 
   mutate(Class = Class / 2 - 1)
 
 X <- model.matrix(Class ~ ., data = dat)
@@ -44,7 +44,7 @@ generate_Z <- function(y, X, beta) {
   z
   }
 
-n_samp <- 5000
+n_samp <- 4000
 n_burnin <- 1000
 
 beta <- matrix(NA, nrow = n_samp, ncol = p, dimnames = list(NULL, colnames(X)))
@@ -67,6 +67,8 @@ for (i in 2:n_samp){
 # Throw away burn-in
 beta_post <- beta[(n_burnin+1):n_samp,] %>% 
   as_tibble()
+
+write_rds(beta_post, path = here("gibbs_samples_bc.rds"))
 
 colMeans(beta_post)
 
