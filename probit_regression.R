@@ -57,11 +57,12 @@ dat_z <- dat %>%
 
 sigma <- solve(t(X) %*% X)
 
+timer <- rbenchmark::benchmark(
 for (i in 2:n_samp){
   beta_z <- lm(z ~ ., data = dat_z)$coeff
   beta[i,] <- rmvnorm(n = 1, mean = beta_z, sigma = sigma)
   dat_z$z <- generate_Z(y, X, beta[i,])
-}
+}, replications = 1)
 
 # Throw away burn-in
 beta_post <- beta[(n_burnin+1):n_samp,] %>% 
