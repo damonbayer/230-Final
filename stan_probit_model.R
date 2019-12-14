@@ -43,7 +43,7 @@ options(mc.cores = parallel::detectCores())  ## local multicore CPUs
 dat = list(N=N, K=K, X=X,y=y)
 model.stan = stan_model(model_code=model_string)
 r = sampling(model.stan, dat, chains = 1, iter = 5000, warmup =1000, init = "0")
-write_rds(x = r, path = "~/Documents/STATS 230/230-Final/stan_samples.rds")
+write_rds(x = r, path = "~/Documents/STATS 230/230-Final/stan_samples_bc.rds")
 
 #load("~/Documents/STATS 230/230-Final/stan_samples.rds")
 summary(r)$summary
