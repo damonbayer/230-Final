@@ -53,6 +53,7 @@ write_rds(x = r, path = "~/Documents/STATS 230/230-Final/stan_samples_mp.rds")
 
 samples <- as.matrix(r)[,-6]
 
+# plot first chain
 source(here("plotting_functions.R"))
-trace_plot(as_tibble(samples))
-dist_plot(as_tibble(samples))
+trace_plot(as_tibble(samples)[1:3000,])
+dist_plot(as_tibble(samples)[1:3000,])
