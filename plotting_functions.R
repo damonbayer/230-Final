@@ -1,7 +1,7 @@
 trace_plot <- function(data) {
   data %>% 
     pivot_longer(cols = everything()) %>% 
-    group_by(name) %>% 
+    mutate(name = as_factor(name)) %>% 
     mutate(t = row_number()) %>% 
     ggplot(aes(x = t, y = value, color = name)) +
     facet_wrap(. ~ name, scales = "free", labeller = label_parsed) +
@@ -15,6 +15,7 @@ trace_plot <- function(data) {
 dist_plot <- function(data) {
   data %>% 
     pivot_longer(cols = everything()) %>% 
+    mutate(name = as_factor(name)) %>% 
     ggplot(aes(x = value, fill = name)) +
     facet_wrap(. ~ name, scales = "free", labeller = label_parsed) +
     geom_density() +
