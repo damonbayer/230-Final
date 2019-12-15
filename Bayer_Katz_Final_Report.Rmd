@@ -43,11 +43,14 @@ post_sample_summary <- function(post) {
 Here's the abstract.
 
 # Introduction
-<!-- (explaining the motivation behind the new algorithm) -->
 
-This project focuses on implementations and applications of several of the algorithms presented in @albertchib93, including data-augmentated Gibbs sampling for probit regression on binary response data, multinomial probit regression on ordinal response data, and the t-link regression on binary response data. The primary contribution of this paper was enabling the computation of exact posterior distributions of regression coefficients for binary and polychotomous response data using latent variables straightforward Gibbs sampling .
+Markov Chain Monte Carlo (MCMC) methods revolutionize Bayesian inference, making it possible to sample from complex posterior distributions. As computing power continues to evolve, so do sampling methods, as well as the complexity of models scientist try to fit. While advances have been made to MCMC, sampling from intractable posterior distributions is still a difficult and time-consuming task. Gibbs Sampling is one of the most common forms of MCMC and one of the earliest attempts to alleviate these struggles of sampling from intractable posteriors was the development of data-augmentation Gibbs Sampling to regression models. 
 
-Compared to traditional maximum likelihood estimation, this approach is advantageous in the case of small data, where mle can be biased, as well as in the case of regression models with complicated likelihoods, such as in the multivariate probit case. Additionally, this method enables the modeling of the marginal distribution of residuals, which are on a continuous scale and can be more helpful for outlier detection than frequentist residuals, which only take on two values.
+@albertchib93 was the first paper to introduce using data augmentation to fit Bayesian probit regression models to binary and  polychotomous data.  They built upon the foundation of Gibbs Sampling built by @gelfand1990sampling and @tannerwong1987. Adding latent variables has been used in many other areas of statistics and mathematics to help with computing.  By introducing a latent variable to the probit regression model of a binary response variable (and its extensions), they were able to simplify the Gibbs Sampling process and make sampling from the posterior distribution easier. This paper laid the groundwork for using data-augmentation Gibbs Sampling for Bayesian inference by enabling the computation of exact posterior distributions of regression coefficients for binary and polychotomous response.
+
+Compared to traditional maximum likelihood estimation (MLE), Albert and Chib’s approach is advantageous in the case of small data, where MLE can be biased, as well as in the case of regression models with complicated likelihoods, such as in the multivariate probit case. Additionally, this method enables the modeling of the marginal distribution of residuals, which are on a continuous scale and can be more helpful for outlier detection than frequentist residuals, which only take on two values.
+
+This paper focuses on implementations and applications of several of the algorithms presented in @albertchib93, including the aforementioned data-augmentated Gibbs sampling for probit regression on binary response data, the multinomial probit regression on ordinal response data, and the t-link regression on binary response data. We will also compare these method to the MLE estimates equivalent methods (Generalized Linear Models), as well as a more modern MCMC method, No-U-Turn Samplers through the implementation on Stan. By comparing these three methods, we can better understand the importance of the introduction of Data-Augmentation to Bayesian inference.
 
 
 # Methodology
@@ -219,6 +222,8 @@ Initailize $\vec \beta^{(0)}$ and $\vec \gamma^{(0)}$ as the MLE \\
 
 
 ## Implementation in Stan (NUTS)
+
+While not the main focus of this paper, we decided to implement the previously described models in a modern MCMC method, a No-U-Turn Sampler (NUTS). NUTS are an extension of Hamiltonian Monte Carlo. We used Stan (through the `rstan` package in R) to implent this models using NUTS. Simple Stan models are fairly straight foward to fit, making it ideal for comaprison with our data-agumantation Gibbs Sampler.   
 
 # Results
 <!-- (applying your algorithm to simulated or real data) -->
