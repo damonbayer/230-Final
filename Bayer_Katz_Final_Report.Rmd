@@ -63,7 +63,7 @@ y_i| \pi_{i},\vec{\beta}, \vec x_i \sim Bernoulli(\pi_{i})  \ \ \ \text{for} \ \
 \end{equation}
 
 \begin{equation}
-\Phi(\pi_{i}) = x_i^T\beta
+\pi_{i} = \Phi(x_i^T\beta)
 \end{equation}
 
 \begin{equation}
@@ -166,7 +166,7 @@ $\nu=8$
 
 ## Multinomial
 
-The previous two data augmentation Gibbs samplers tackled regression models where the response is binary. Data augmentation Gibbs samplers can also be applied to multinomial response variables. Although there are approaches for both ordered and unordered categories, we will focus on the case of ordered categories. Once again, using a probit model will simplify the conditional posterior distributions. Before discussing the alogrithm in depth, we present the general model for ordered multinomial data that we will fit using the data augmented Gibbs Sampler. 
+The previous two data augmentation Gibbs samplers tackled regression models where the response is binary. Data augmentation Gibbs samplers can also be applied to multinomial response variables. Although there are approaches for both ordered and unordered categories, we will focus on the case of ordered categories. Once again, using a probit model will simplify the conditional posterior distributions. Before discussing the alogrithm in depth, we present the ordered multinomial probit model for which we will use Gibbs Sampling to fit. This model
 
 
 
