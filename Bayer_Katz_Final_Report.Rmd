@@ -11,6 +11,7 @@ output:
     df_print: kable
 header-includes:
   - \usepackage[linesnumbered,lined,boxed,commentsnumbered]{algorithm2e}
+  - \usepackage{amsmath}
 bibliography: references.bib
 ---
 
@@ -57,9 +58,18 @@ In this paper, we implement data augmentation Gibbs sampling for probit regressi
 
 The first model that data augmentation can be used to find posterior distributions is the profit model. The following is a standard Bayesian Probit model with non informative priors on the regression coefficients: 
 
-$$y_i| \pi_{i},\vec{\beta}, \vec x_i \sim Bernoulli(\pi_{i})  \ \ \ \text{for} \ \  i = 0,...,n$$
-$$ \Phi(\pi_{i}) = x_i^T\beta$$
-$$\beta_j \sim N(0, 100),  \ \ \ \text{for} \  j = 0,...,p$$
+\begin{equation}
+y_i| \pi_{i},\vec{\beta}, \vec x_i \sim Bernoulli(\pi_{i})  \ \ \ \text{for} \ \  i = 0,...,n
+\end{equation}
+
+\begin{equation}
+\Phi(\pi_{i}) = x_i^T\beta
+\end{equation}
+
+\begin{equation}
+\beta_j \sim N(0, 100),  \ \ \ \text{for} \  j = 0,...,p
+\end{equation}
+
 
 Note that $\Phi$ is the cumulative density function of the normal distribution. 
 
@@ -97,9 +107,25 @@ n = Number of Observations
 }
 \end{algorithm}
   
-## T-link:
+## T-link to Approximate Logistic Regression:
 
-The T-link is an extension of the probit regression model. Instead of using the normal cdf, we use the t-distribution cdf as our link function. By generalizing the model, we can now choose a degrees of freedom, $\nu$ where t($\nu$) better fits out model and thus a link function that approximates other well-known link functions. For example, we are usually concerned with logistic regression because of the interpretability of the coefficients into odds ratios. The flexibility of the t-link function allows us to draw from a posterior distribution of $\vec \beta$ that is approximately the posterior distribution if we had chosen to use the logit link function. Note that if we set the degrees of freedom equal to infinity, we would revert back to the probit model [@albertchib93]. 
+In this section we will discuss an extension of the Gibbs sampler discussed for the probit model. The purpose of this model is to use data augmentation with t-distributions to approximate the logistic regression model for a binary response. The simple Bayesian Logistic Regression model with non-informative priors is as follows: 
+
+\begin{equation}
+y_i| \pi_{i},\vec{\beta}, \vec x_i \sim Bernoulli(\pi_{i})  \ \ \ \text{for} \ \  i = 0,...,n
+\end{equation}
+
+\begin{equation}
+\text{logit}(\pi_{i}) = x_i^T\beta
+\end{equation}
+
+\begin{equation}
+\beta_j \sim N(0, 100),  \ \ \ \text{for} \  j = 0,...,p
+\end{equation}
+
+Where $\text{logit}(p) = \frac{p}{1-p}$ 
+
+The T-link is an extension of the probit regression model because instead of using the normal cdf (as in the probit model) we use the t-distribution cdf as our link function. If we replace $\Phi$ with the cdf of the t($\nu$) in (2), we would have Bayesian t-link model. By generalizing the model, we can now choose a degrees of freedom, $\nu$ where t($\nu$) better fits out model and thus a link function that approximates other well-known link functions. For example, we are usually concerned with logistic regression because of the interpretability of the coefficients into odds ratios. The flexibility of the t-link function allows us to draw from a posterior distribution of $\vec \beta$ that is approximately the posterior distribution if we had chosen to use the logit link function. Note that if we set the degrees of freedom equal to infinity, we would revert back to the probit model [@albertchib93]. 
 
 According to Albert and Chib, a t-distribution with a degrees of freedom of 8 is a fairly close approximation of the logistic regression model, once a correction factor of 0.634 is taken into account [@albertchib93].
 
