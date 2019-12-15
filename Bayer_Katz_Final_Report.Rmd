@@ -51,7 +51,7 @@ Here's the introduction.
 # Methodology
 <!-- (explaining the algorithm), -->
 
-In this paper, we implement data augmentation Gibbs sampling for probit regression, multinomial probit of ordered data, and an extension of the probit model, the t-link model which were introduced by Albert and Chib (1993). In this section we will detail the methods and provide the algorithms for each. 
+In this paper, we implement data augmentation Gibbs sampling for probit regression, multinomial probit regression of ordered data, and an extension of the probit regtession model, the t-link regression model [@albertchib93]. These methods are used to generate samples from posterior distributions for Bayesain inference. In this section, we will detail the methods and provide the algorithms for each. 
 
 ## Profit Model: 
 
@@ -63,11 +63,11 @@ $$\beta_j \sim N(0, 100),  \ \ \ \text{for} \  j = 0,...,p$$
 
 Note that $\Phi$ is the cumulative density function of the normal distribution. 
 
-The idea of data augmentation is to introduce a continuous latent variable derived from a binary response in order to make sampling from the posterior distributions of the profit model coefficients easier. By introducing independent latent variables $Z_1, ... Z_n$, we can now find the joint posterior of $\vec \beta$ and $\vec Z$ given Y. We can then marginalize over the posterior distribution of $\vec Z|\vec Y$ and thus we have the conditional posterior of $\beta|\vec{Z},\vec{Y}$. This method is further simplified if we assume (as we did above) non-informative priors on the regression coefficients, $\vec \beta$. 
+The idea of data augmentation is to introduce a continuous latent variable derived from a binary response in order to make sampling from the posterior distributions of the profit model coefficients easier. By introducing independent latent variables $Z_1, ... Z_n$, we can now find the joint posterior of $\vec \beta$ and $\vec Z$ given Y. We can then marginalize over the posterior distribution of $\vec Z|\vec Y$ and thus we have the conditional posterior of $\beta|\vec{Z},\vec{Y}$. This method is further simplified if we assume (as we did above) non-informative priors on the regression coefficients, $\vec \beta$ [@albertchib93]. 
 
-With this approach we are able to create a Gibbs sampler that only needs to sample from truncated normal distributions and multivariate normal distribution, which are extremely easy with today's computing power. Based on the fully conditonal posterior of $\beta|\vec{Z},\vec{Y}$, Albert and Chib equated this method of profit regression on binary Y to doing linear regression on the latent variable Z. This will be evident in the algortim as we use the `lm` function to find the mean of the posterior distribution of $\beta|\vec{Z},\vec{Y}$. 
+With this approach we are able to create a Gibbs sampler that only needs to sample from truncated normal distributions and multivariate normal distribution, which are extremely easy with today's computing power. Based on the fully conditonal posterior of $\beta|\vec{Z},\vec{Y}$, Albert and Chib equated this method of profit regression on binary Y to doing linear regression on the latent variable Z. This will be evident in the algortim as we use the `lm` function to find the mean of the posterior distribution of $\beta|\vec{Z},\vec{Y}$ [@albertchib93]. 
 
-## Algorithm: 
+### Algorithm: 
 
 \begin{algorithm}[H]
 \caption{Probit Regression Using Gibbs Sampler with Data Augmentation}
@@ -97,15 +97,46 @@ n = Number of Observations
 }
 \end{algorithm}
   
-T-link:
+## T-link:
 
-The T-link is an extension of the above model, which allows use to use the t-distribution as our link function instead of the normal distribution. By generalizing the model, we can now choose a distribution that better fits out model. Usually, we are concerned with logistic regression because of the interpretability of this particular model. The flexibility of the t-link function allows us to draw from a posterior distribution of $\vec \beta$ that is approximately the posterior distribution if we had chosen to use the logit link function. According to Albert and Chib, a t-distribution with a degrees of freedom of 8 is a fairly close approximation of the logistic regression model.
+The T-link is an extension of the probit regression model. Instead of using the normal cdf, we use the t-distribution cdf as our link function. By generalizing the model, we can now choose a degrees of freedom, $\nu$ where t($\nu$) better fits out model and thus a link function that approximates other well-known link functions. For example, we are usually concerned with logistic regression because of the interpretability of the coefficients into odds ratios. The flexibility of the t-link function allows us to draw from a posterior distribution of $\vec \beta$ that is approximately the posterior distribution if we had chosen to use the logit link function. Note that if we set the degrees of freedom equal to infinity, we would revert back to the probit model [@albertchib93]. 
 
-To implement this link function, we must introduce a second set of latent variables, $\lambda_i$.The details of this method can be found in the algortihm.  
-Description:
+According to Albert and Chib, a t-distribution with a degrees of freedom of 8 is a fairly close approximation of the logistic regression model, once a correction factor of 0.634 is taken into account [@albertchib93].
 
-Algorithm:
+To implement this link function, we must introduce a second set of latent variables, $\lambda_i$. This variable is introduced to simulate the heavier tales of the t-distribution compared to the normal distribution. Our implementation is slightly different from Albert and Chib's because of the ability to sample from a truncated t distribution and issues implementing their algorithm. We still need to simulate $\lambda$ in order to sample from the conditional posterior of $\beta^{(k)}|\vec Z, \vec Y, \lambda, \nu$. We took the degrees of freedom equal to 8 to campare results to the logistic regression model. You could sample from the posterior distribution of $\nu$ and better understand how well your model fits the data, but we choose to focus on logistic regression. 
 
+
+### Algorithm:
+
+\begin{algorithm}[H]
+\caption{Tobit Regression Using Gibbs Sampler with Data Augmentation ($\nu =8$)}
+\DontPrintSemicolon
+\SetAlgoLined
+\SetKwInOut{Input}{Input}\SetKwInOut{Output}{Output}
+\Input{$\vec{Y}$,$\textbf{X}$}
+\Output{Posterior Samples of Regression Coeffiecents, $\vec \beta$}
+\BlankLine
+Set Number of Samples (Total ($N_s$) and Burn-in) \\
+n = Number of Observations \\ 
+Initailize $\vec \beta^{(0)}$ and set $\lambda = \vec 1_n$ \\
+$\nu=8$
+\BlankLine
+\For{k = 1 to $N_s$}{
+  \For{i = 1 to n}{
+    \eIf{$y_i$ = 1}{
+        Sample $z_i^{(k)}$ from trunc$\mathcal{N}$($x_i^T\beta^{(k-1)}$,$\lambda_i^{-1}$,0,$\infty$)\;
+    }{
+        Sample $z_i^{(k)}$ from trunc$\mathcal{N}$($x_i^T\beta^{(k-1)}$,$\lambda_i^{-1}$,$-\infty$,0)\;
+    }
+  }
+  W = diag($\vec \lambda$) \\
+  Set $\Sigma = (X^TWX)^{-1}$ \\
+  $\vec \beta_Z = \Sigma X^TWZ$ \\
+  \BlankLine
+  Sample $\beta^{(k)}|\vec Z,\vec \lambda,\vec Y \nu$ from $\mathcal{N}(\hat{\vec \beta_Z}^{(k)}, \textbf{$\Sigma$})$ \\
+  Sample $\lambda_i$ from $\Gamma\left(\frac{\nu+1}{2},\frac{\nu+(Z_i-x_i^T\beta)^2}{2}\right)$
+}
+\end{algorithm} 
 
 Multinomial:
 
@@ -117,7 +148,7 @@ Algorithm.
 # Results
 <!-- (applying your algorithm to simulated or real data) -->
 
-For three datasets, we apply the appropriate previously discussed model as well as standard maximum likelihood estimation and custom models written in Stan [@mcstan] and impelemented in the RStan package [@rstan].
+For three data sets, we apply the appropriate previously discussed model as well as standard maximum likelihood estimation and custom models written in Stan [@mcstan] and implemented in the RStan package [@rstan].
 
 ## Small-Cell Carcinoma
 
