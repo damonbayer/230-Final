@@ -95,3 +95,6 @@ summary(logit_model)
 source("plotting_functions.R")
 trace_plot(beta_post/.634)
 dist_plot(beta_post/.634)
+
+
+write_rds(x = beta_post, path = "~/Documents/STATS 230/230-Final/Gibbs_logit_bc.rds")
