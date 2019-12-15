@@ -26,6 +26,8 @@ y <- dat$Class
 n <- nrow(X)
 p <- ncol(X)
 
+
+# Sample from a truncated t distribution -----------------------------
 generate_Z <- function(y, X, beta,nu) {
   n <- length(y)
   mu <- X %*% beta
@@ -47,32 +49,34 @@ generate_Z <- function(y, X, beta,nu) {
   z
 }
 
+
+# Initailize Model ----------------------------
 n_samp <- 6000
 n_burnin <- 2000
+
 nu <- 8
+
 beta <- matrix(NA, nrow = n_samp, ncol = p, dimnames = list(NULL, colnames(X)))
+
 set.seed(230)
-beta[1,] <- glm(Class ~ ., family = binomial(link = "probit"), data = dat)$coeff
+beta[1,] <- glm(Class ~ ., family = binomial(link = "probit"), data = dat)$coeff #start with probit
+
 lambda <- rep(1,n)
+
 dat_z <- dat %>%
   select(-Class) %>%
   mutate(z = generate_Z(y, X, beta[1,],nu))
+
+
 
 timer <- rbenchmark::benchmark(
   for (i in 2:n_samp){
     W <- diag(lambda)
     sigma <- solve(t(X) %*% W %*% X)
-    beta_z <- lm(z ~ ., data = dat_z, weights = lambda)$coeff
+    beta_z <- sigma %*% t(X) %*% W %*% dat_z$z
     beta[i,] <- rmvnorm(n=1, beta_z, sigma)
-    
-    shape <- (nu + 1) / 2
-    
-    rates <-  as.vector(2 / (nu + (dat_z$z - X %*% beta[i,])^2))
-    #rate <-  2/nu
-    
-    #lambda <- rgamma(n = n, shape = shape, rate =  = rate)
-    lambda <- vapply(rates, function(rate) rgamma(n = 1, shape = shape, rate = rate), FUN.VALUE = 1.0)
-    
+
+    lambda <- rgamma(n, shape = (nu+1)/2, scale = (nu + (dat_z$z - X %*% beta[i,])^2)/2)
     dat_z$z <- generate_Z(y, X, beta[i,],nu)
   }, replications = 1)
 
@@ -80,11 +84,14 @@ timer <- rbenchmark::benchmark(
 beta_post <- beta[(n_burnin+1):n_samp,] %>% 
   as_tibble()
 
-write_rds(beta_post, path = here("gibbs_samples_bc.rds"))
+# write_rds(beta_post, path = here("gibbs_samples_bc.rds"))
 
-colMeans(beta_post)
+colMeans(beta_post/.634)
 
 probit_model <- glm(Class ~ ., family = binomial(link = "probit"), data = dat)
 logit_model <- glm(Class ~ ., family = "binomial", data = dat)
 
 summary(logit_model)
+source("plotting_functions.R")
+trace_plot(beta_post/.634)
+dist_plot(beta_post/.634)
