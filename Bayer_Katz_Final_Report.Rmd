@@ -376,15 +376,13 @@ summary(bb_mle_est)$coefficients %>%
 # Discussion
 <!-- (shortcomings of this new algorithm and how it can be improved). -->
 
-Here's the discussion.
+The data-augmented Gibbs sampling algorithms applied in this project largely performed well. They were significanlty faster than the regression modesl implemented in Stan, which made analysis of the large baseball dataset feasible in a short amount of time, when it would have otherwise taken much longer. The chief shortcoming of these methods is the poor mixing properties we observed with the Small-Cell Carcinoma data. Simulating much greater samples and using thinning did not lead to any improvement in mixing. Despite the poor mixing of the chains, the posterior means and medians closely aligned with the results observed in the Stan model and obtained with maximum likelihood estimation.
 
-Mention Corey's research?
+In addition the use of flat, improper priors may be of concern to some practioners.
 
-Extensions of data augmentation for other models?
+Although the models described in @albertchib93 and demonstrated in this project remain popular to this day [@chakraborty2017], much works has been done to expand upon its foundation. Several papers have made efforts to apply the strategy described here to the logit model [@holmes2006; @Schnatter2010; @gramacy2012; @Polson2013] as wells as negative binomial regression [@NIPS2012_4567].
 
-
-
-Mention poor mixing?
+*COREY DO YOU HAVE ANY REFERENCES TO STUFF RELATED TO YOUR RESEARCH?*
 
 
 
