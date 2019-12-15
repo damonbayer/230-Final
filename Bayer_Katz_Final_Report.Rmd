@@ -45,14 +45,15 @@ Here's the abstract.
 # Introduction
 <!-- (explaining the motivation behind the new algorithm) -->
 
-We cite @albertchib93
+This project focuses on implementations and applications of several of the algorithms presented in @albertchib93, including data-augmentated Gibbs sampling for probit regression on binary response data, multinomial probit regression on ordinal response data, and the t-link regression on binary response data. The primary contribution of this paper was enabling the computation of exact posterior distributions of regression coefficients for binary and polychotomous response data using latent variables straightforward Gibbs sampling .
 
-Here's the introduction.
+Compared to traditional maximum likelihood estimation, this approach is advantageous in the case of small data, where mle can be biased, as well as in the case of regression models with complicated likelihoods, such as in the multivariate probit case. Additionally, this method enables the modeling of the marginal distribution of residuals, which are on a continuous scale and can be more helpful for outlier detection than frequentist residuals, which only take on two values.
+
 
 # Methodology
 <!-- (explaining the algorithm), -->
 
-In this paper, we implement data-augmentated Gibbs sampling for probit regression on binary response data, multinomial probit regression on ordinal response data, and an extension of the probit regtession model, the t-link regression model for binary response data [@albertchib93]. These methods are used to generate samples from posterior distributions for Bayesain inference on regression coefficients. In this section, we detail each method, including pseudocode for its algorithm.
+In this section, we detail each method for data-augmented Gibbs sampling, including pseudocode for each algorithm.
 
 ## Probit Model 
 
