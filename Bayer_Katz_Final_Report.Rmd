@@ -12,6 +12,7 @@ output:
 header-includes:
   - \usepackage[linesnumbered,lined,boxed,commentsnumbered]{algorithm2e}
   - \usepackage{amsmath}
+  - \usepackage{bm}
 bibliography: references.bib
 ---
 
@@ -40,17 +41,17 @@ post_sample_summary <- function(post) {
 
 # Abstract
 
-Here's the abstract.
+This project focuses on implementations and applications of several of the algorithms presented in @albertchib93, including data-augmented Gibbs sampling for probit regression on binary response data, multinomial probit regression on ordinal response data, and t-link regression on binary response data. We compare these method to the equivalent MLE estimates, as well as a more modern MCMC method, No-U-Turn Samplers, as implemented in Stan. Broadly, these methods all resulted in similar point estimates for regression parameters. The data-augmented Gibbs sampling performed significantly faster than the Stan models, but had some issues with mixing in the posterior distributions. Further research has been done to apply the methods here to regression methods on binary and polychotomous response data with other link functions. The authors hope to apply some of the concepts developed here in an ongoing research project to model pitching change decisions in baseball.
 
 # Introduction
 
-Markov Chain Monte Carlo (MCMC) methods revolutionize Bayesian inference, making it possible to sample from complex posterior distributions. As computing power continues to evolve, so do sampling methods, as well as the complexity of models scientist try to fit. While advances have been made to MCMC, sampling from intractable posterior distributions is still a difficult and time-consuming task. Gibbs Sampling is one of the most common forms of MCMC and one of the earliest attempts to alleviate these struggles of sampling from intractable posteriors was the development of data-augmentation Gibbs Sampling to regression models. 
+Markov Chain Monte Carlo (MCMC) methods revolutionize Bayesian inference, making it possible to sample from complex posterior distributions. As computing power continues to evolve, so do sampling methods, as well as the complexity of models scientist try to fit. While advances have been made to MCMC, sampling from non-conjugate posterior distributions is still a difficult and time-consuming task. Gibbs sampling is one of the most common forms of MCMC and one of the earliest attempts to alleviate these struggles of sampling from intractable posteriors was the development of data-augmentation Gibbs Sampling for regression models. 
 
-@albertchib93 was the first paper to introduce using data augmentation to fit Bayesian probit regression models to binary and  polychotomous data.  They built upon the foundation of Gibbs Sampling built by @gelfand1990sampling and @tannerwong1987. Adding latent variables has been used in many other areas of statistics and mathematics to help with computing.  By introducing a latent variable to the probit regression model of a binary response variable (and its extensions), they were able to simplify the Gibbs Sampling process and make sampling from the posterior distribution easier. This paper laid the groundwork for using data-augmentation Gibbs Sampling for Bayesian inference by enabling the computation of exact posterior distributions of regression coefficients for binary and polychotomous response.
+@albertchib93 was the first paper to introduce using data augmentation to fit Bayesian probit regression models to binary and  polychotomous data.  It builds upon the foundation of Gibbs sampling in  @gelfand1990sampling and @tannerwong1987. Adding latent variables has been used in many other areas of statistics and mathematics to aid in computation  By introducing a latent variable to the probit regression model of a binary response variable, they are able to simplify the Gibbs sampling process and make sampling from the posterior distribution easier. This paper laid the groundwork for using data-augmentation Gibbs Sampling for Bayesian inference by enabling the computation of exact posterior distributions of regression coefficients for binary and polychotomous response.
 
 Compared to traditional maximum likelihood estimation (MLE), Albert and Chib’s approach is advantageous in the case of small data, where MLE can be biased, as well as in the case of regression models with complicated likelihoods, such as in the multivariate probit case. Additionally, this method enables the modeling of the marginal distribution of residuals, which are on a continuous scale and can be more helpful for outlier detection than frequentist residuals, which only take on two values.
 
-This paper focuses on implementations and applications of several of the algorithms presented in @albertchib93, including the aforementioned data-augmentated Gibbs sampling for probit regression on binary response data, the multinomial probit regression on ordinal response data, and the t-link regression on binary response data. We will also compare these method to the MLE estimates equivalent methods (Generalized Linear Models), as well as a more modern MCMC method, No-U-Turn Samplers through the implementation on Stan. By comparing these three methods, we can better understand the importance of the introduction of Data-Augmentation to Bayesian inference.
+This paper focuses on implementations and applications of several of the algorithms presented in @albertchib93, including the aforementioned data-augmented Gibbs sampling for probit regression on binary response data, multinomial probit regression on ordinal response data, and t-link regression on binary response data. We compare these method to the equivalent MLE estimates (Generalized Linear Models), as well as a more modern MCMC method, No-U-Turn Samplers, as implemented in Stan [@mcstan]. By comparing these three methods, we can better understand the importance of the introduction of data augmentation to Bayesian inference.
 
 
 # Methodology
@@ -75,11 +76,11 @@ y_i| \pi_{i},\vec{\beta}, \vec x_i \sim Bernoulli(\pi_{i})  \ \ \ \text{for} \ \
 \end{equation}
 
 
-Note that $\Phi$ is the cumulative density function of the normal distribution. 
+Where $\Phi$ is the cumulative density function of the normal distribution. 
 
 The idea of data augmentation is to introduce a continuous latent variable derived from a binary response in order to make sampling from the posterior distributions of the probit model coefficients easier. By introducing independent latent variables $Z_1, ... Z_n$, we can now find the joint posterior of $\vec \beta$ and $\vec Z$ given Y. We can then marginalize over the posterior distribution of $\vec Z|\vec Y$ and thus we have the conditional posterior of $\beta|\vec{Z},\vec{Y}$. This method is further simplified if we assume (as we did above) non-informative priors on the regression coefficients, $\vec \beta$ [@albertchib93]. 
 
-With this approach we are able to create a Gibbs sampler that only needs to sample from truncated normal distributions and multivariate normal distribution, which are extremely easy with today's computing power. Based on the fully conditonal posterior of $\beta|\vec{Z},\vec{Y}$, Albert and Chib equated this method of probit regression on binary Y to doing linear regression on the latent variable Z. This will be evident in the algortim as we use the `lm` function to find the mean of the posterior distribution of $\beta|\vec{Z},\vec{Y}$ [@albertchib93]. 
+With this approach we are able to create a Gibbs sampler that only needs to sample from truncated normal distributions and multivariate normal distribution, which are extremely easy with today's computing power. Based on the fully conditional posterior of $\beta|\vec{Z},\vec{Y}$, Albert and Chib equated this method of probit regression on binary Y to doing linear regression on the latent variable Z. This will be evident in the immortal as we use the `lm` function to find the mean of the posterior distribution of $\beta|\vec{Z},\vec{Y}$ [@albertchib93]. 
 
 ### Algorithm: 
 
@@ -89,10 +90,10 @@ With this approach we are able to create a Gibbs sampler that only needs to samp
 \SetAlgoLined
 \SetKwInOut{Input}{Input}\SetKwInOut{Output}{Output}
 \Input{$\vec{Y}$,$\textbf{X}$}
-\Output{Posterior Samples of Regression Coeffiecents, $\vec \beta$}
+\Output{Posterior Samples of Regression Coefficients, $\vec \beta$}
 \BlankLine
 Set Number of Samples (Total ($N_s$) and Burn-in) 
-Initailize $\vec \beta^{(0)}$ \\
+Initialize $\vec \beta^{(0)}$ \\
 Set $\Sigma = (X^TX)^{-1}$
 n = Number of Observations
 \BlankLine
@@ -105,7 +106,7 @@ n = Number of Observations
     }
   }
   Regress $\vec Z$ onto $\textbf{X}$ to find $\vec \beta_Z$ \\
-  Sample $\beta^{(k)}|\vec Z$ from $\mathcal{N}(\hat{\vec \beta_Z}^{(k)}, \textbf{$\Sigma$})$
+  Sample $\beta^{(k)}|\vec Z$ from $\mathcal{N}(\hat{\vec \beta}_Z^{(k)}, \bm{\Sigma})$
   
   
 }
@@ -113,7 +114,7 @@ n = Number of Observations
   
 ## T-link to Approximate Logistic Regression
 
-In this section we will discuss an extension of the Gibbs sampler discussed for the probit model. The purpose of this model is to use data augmentation with t-distributions to approximate the logistic regression model for a binary response. The simple Bayesian Logistic Regression model with non-informative priors is as follows: 
+In this section we discuss an extension of the Gibbs sampler discussed for the probit model. The purpose of this model is to use data augmentation with t-distributions to approximate the logistic regression model for a binary response. The simple Bayesian Logistic Regression model with non-informative priors is as follows: 
 
 \begin{equation}
 y_i| \pi_{i},\vec{\beta}, \vec x_i \sim Bernoulli(\pi_{i})  \ \ \ \text{for} \ \  i = 0,...,n
@@ -127,13 +128,13 @@ y_i| \pi_{i},\vec{\beta}, \vec x_i \sim Bernoulli(\pi_{i})  \ \ \ \text{for} \ \
 \beta_j \sim N(0, 100),  \ \ \ \text{for} \  j = 0,...,p
 \end{equation}
 
-Where $\text{logit}(p) = \frac{p}{1-p}$ 
+Where $\text{logit}(p) = \frac{p}{1-p}$.
 
-The T-link is an extension of the probit regression model because instead of using the normal cdf (as in the probit model) we use the t-distribution cdf as our link function. If we replace $\Phi$ with the cdf of the t($\nu$) in (2), we would have Bayesian t-link model. By generalizing the model, we can now choose a degrees of freedom, $\nu$ where t($\nu$) better fits out model and thus a link function that approximates other well-known link functions. For example, we are usually concerned with logistic regression because of the interpretability of the coefficients into odds ratios. The flexibility of the t-link function allows us to draw from a posterior distribution of $\vec \beta$ that is approximately the posterior distribution if we had chosen to use the logit link function. Note that if we set the degrees of freedom equal to infinity, we would revert back to the probit model [@albertchib93]. 
+Rather than using the normal cdf (as in the probit model) we use the t-distribution cdf as our link function. Replacing $\Phi$ with the cdf of the t($\nu$) in (2), we achieve the Bayesian t-link model. By generalizing the model, we can now choose a degrees of freedom, $\nu$ where t($\nu$) better fits out model and thus a link function that approximates other well-known link functions. For example, many practitioners prefer logistic regression because of the interpretability of the coefficients as odds ratios. The flexibility of the t-link function allows us to draw from a posterior distribution of $\vec \beta$ that is approximately the posterior distribution if we had chosen to use the logit link function. Note that if we set the degrees of freedom equal to infinity, we would revert back to the probit model [@albertchib93].
 
 A t-distribution with a degrees of freedom of 8 is a fairly close approximation of the logistic regression model, once a correction factor of 0.634 is taken into account [@albertchib93].
 
-To implement this link function, we must introduce a second set of latent variables, $\lambda_i$. This variable is introduced to simulate the heavier tales of the t-distribution compared to the normal distribution. Our implementation is slightly different from Albert and Chib's because of the ability to sample from a truncated t distribution and issues implementing their algorithm. We still need to simulate $\lambda$ in order to sample from the conditional posterior of $\beta^{(k)}|\vec Z, \vec Y, \lambda, \nu$. We took the degrees of freedom equal to 8 to campare results to the logistic regression model. You could sample from the posterior distribution of $\nu$ and better understand how well your model fits the data, but we choose to focus on logistic regression. 
+To implement this link function, we introduce a second set of latent variables, $\lambda_i$. This variable is introduced to simulate the heavier tales of the t-distribution compared to the normal distribution. Our implementation is slightly different from Albert and Chib's, due to some issues we encountered with their exact implementation. Albert and Chib describe a procedure for evaluating different degrees of freedom in the t-link in order to choose the best fit to the data, but we were unable to successfully implement it for this project. Because of this, we choose to focus only on 8 degrees of freedom to enable comparisons to logistic regression.
 
 
 ### Algorithm:
@@ -144,11 +145,11 @@ To implement this link function, we must introduce a second set of latent variab
 \SetAlgoLined
 \SetKwInOut{Input}{Input}\SetKwInOut{Output}{Output}
 \Input{$\vec{Y}$,$\textbf{X}$}
-\Output{Posterior Samples of Regression Coeffiecents, $\vec \beta$}
+\Output{Posterior Samples of Regression Coefficients, $\vec \beta$}
 \BlankLine
 Set Number of Samples (Total ($N_s$) and Burn-in) \\
 n = Number of Observations \\ 
-Initailize $\vec \beta^{(0)}$ and set $\lambda = \vec 1_n$ \\
+Initialize $\vec \beta^{(0)}$ and set $\lambda = \vec 1_n$ \\
 $\nu=8$
 \BlankLine
 \For{k = 1 to $N_s$}{
@@ -170,7 +171,7 @@ $\nu=8$
 
 ## Multinomial
 
-The previous two data augmentation Gibbs samplers tackled regression models where the response is binary. Data augmentation Gibbs samplers can also be applied to multinomial response variables. Although there are approaches for both ordered and unordered categories, we will focus on the case of ordered categories. Once again, using a probit model will simplify the conditional posterior distributions. Before discussing the alogrithm in depth, we present the ordered multinomial probit [@aitchison1957;@gurland1960;@mccullagh1980] model for which we will use Gibbs Sampling to fit.
+Data augmentation Gibbs samplers can also be applied to multinomial response variables. Although there are approaches for both ordered and unordered categories, we will focus on the case of ordered categories. Once again, using a probit model will simplify the conditional posterior distributions. Before discussing the algorithm in depth, we present the ordered multinomial probit [@aitchison1957;@gurland1960;@mccullagh1980] model for which we will use Gibbs Sampling to fit.
 
 
 \begin{equation}
@@ -186,9 +187,9 @@ p_{ij} = \Phi(\gamma_j - \vec x_i^T \vec \beta)
 \vec \gamma, \vec \beta \sim \pi(\vec \beta, \vec \gamma)
 \end{equation}
 
-where $\pi(\vec \beta, \vec \gamma)$ is the prior on the regression coeffeicents. We will assume to be non-informative as is commonly done in analysis. 
+where $\pi(\vec \beta, \vec \gamma)$ is the prior on the regression coefficients. We will assume to be non-informative as is commonly done in analysis. 
 
-Similar to the binary case, a latent variable $\vec Z = (Z_1,...Z_n)$ is introduced making it possible to simulate from a joint posterior. Further, we can marginalize over $\vec Z$ to find the posterior distribution of $\beta|\vec{Z},\vec{Y},\vec \gamma$, which is the same multivarite normal distribution as the binary case, and the conditional posterior of $\vec \gamma|\vec{Z},\vec{Y}, \vec \beta$. This Gibbs sampler requires only sampling from truncated normal distributions, a multivarite distribution, and a unifrom distribution. [@albertchib93] The algorithm below presents, in detail, the sampling mechanism of this data augmentation Gibbs Sampler. 
+Similar to the binary case, a latent variable $\vec Z = (Z_1,...Z_n)$ is introduced making it possible to simulate from a joint posterior. Further, we can marginalize over $\vec Z$ to find the posterior distribution of $\beta|\vec{Z},\vec{Y},\vec \gamma$, which is the same multivariate normal distribution as the binary case, and the conditional posterior of $\vec \gamma|\vec{Z},\vec{Y}, \vec \beta$. This Gibbs sampler requires only sampling from truncated normal distributions, a multivariate distribution, and a uniform distribution. [@albertchib93] The algorithm below presents, in detail, the sampling mechanism of this data augmentation Gibbs sampler. 
 
 
 ### Algorithm:
@@ -200,11 +201,11 @@ Similar to the binary case, a latent variable $\vec Z = (Z_1,...Z_n)$ is introdu
 \SetAlgoLined
 \SetKwInOut{Input}{Input}\SetKwInOut{Output}{Output}
 \Input{$\vec{Y}$,$\textbf{X}$}
-\Output{Posterior Samples of Regression Coeffiecents, $\vec \beta$ and $\vec \gamma$}
+\Output{Posterior Samples of Regression Coefficients, $\vec \beta$ and $\vec \gamma$}
 \BlankLine
 Set Number of Samples (Total ($N_s$) and Burn-in) \\
 n = Number of Observations \\ 
-Initailize $\vec \beta^{(0)}$ and $\vec \gamma^{(0)}$ as the MLE \\
+Initialize $\vec \beta^{(0)}$ and $\vec \gamma^{(0)}$ as the MLE \\
 
 \BlankLine
 \For{k = 1 to $N_s$}{
@@ -223,7 +224,7 @@ Initailize $\vec \beta^{(0)}$ and $\vec \gamma^{(0)}$ as the MLE \\
 
 ## Implementation in Stan (NUTS)
 
-While not the main focus of this paper, we decided to implement the previously described models in a modern MCMC method, a No-U-Turn Sampler (NUTS). NUTS are an extension of Hamiltonian Monte Carlo. We used Stan (through the `rstan` package in R) to implent this models using NUTS. Simple Stan models are fairly straight foward to fit, making it ideal for comaprison with our data-agumantation Gibbs Sampler.   
+While not the main focus of this paper, we decided to implement the previously described models in a modern MCMC method, a No-U-Turn Sampler (NUTS). NUTS are an extension of Hamiltonian Monte Carlo. We used Stan (through the `Rstan` package in R [@mcstan; @rstan]) to implement this models using NUTS.   
 
 # Results
 <!-- (applying your algorithm to simulated or real data) -->
@@ -276,7 +277,7 @@ suppressMessages(summary(multinomial_mle_est)) %>%
   kable(caption = "MLE estimates for small-cell carcinoma data")
 ```
 
-For this set of data, the results from the three models are fairly simliar. The Gibbs Sampler and the Stan models are slightly different (more so than the succeding data sets) from eachother for the three distributions on $\gamma$'s. This is probably to issues of mixing for the data augmented Gibbs Sampler. The trace plots show above do not provide evidence of mixing. We also note asymmetric posterior distrbutions. This issues will be further discussed in Section 5. 
+For this set of data, the results from the three models are fairly similar. The trace plots for the Gibbs sampler show a large degree of auto-correlation for the $gamma$ variables, which is a likely explanation for the difference between the Gibbs and Stan estimates. We also note asymmetric posterior distributions. This issues will be further discussed in Section 5. 
 
 ## Breast Cancer
 
@@ -339,7 +340,7 @@ summary(bc_mle_est)$coefficients %>%
   kable(caption = "MLE estimates for breast cancer data and probit link")
 ```
 
-We can see that the probit regression model for this data garnered very similar results from all three methods. We can see that the Stan model mixed better than the Gibbs Sampler, but the posterior distributions are very similar. Once again, The mixing issues with the data-augmented Gibbs Sampler will be discussed in greater detail in Section 5. 
+We note that the probit regression model for this data garnered very similar results from all three methods. While the Stan model mixed better than the Gibbs Sampler, the posterior distributions are very similar. Mixing issues are discussed in more detail in Section 5. 
 
 ### T-Link/Logistic Regression 
 
@@ -382,11 +383,11 @@ summary(bc_mle_est_logit)$coefficients %>%
   kable(caption = "MLE estimates for breast cancer data and logit link")
 ```
 
-We note that the transformed t-link point estimates closesly match the Stan model coefficients as well as the maximum likelihood estimates. The Gibbs sample trace plot exhibit strong autocoreelation in some plots, but the posterior distributions look fairly normal. There are no obvious problems with the posterior distributions generated with the Stan model.
+We note that the transformed t-link point estimates closely match the Stan model coefficients as well as the maximum likelihood estimates. The Gibbs sample trace plot exhibit strong auto-correlation in some plots, but the posterior distributions look fairly normal. There are no obvious problems with the posterior distributions generated with the Stan model.
 
 ## Baseball
 
-We evaluate the performance of data-augmented Gibbs sampling on a larger datasets (more predictors and observations than the breast cancer data), by fitting probit regression models on baseball data. The baseball data comes from Major League Baseball pitch tracking software and was prepared by the Los Angeles Dodgers for the purpose of predicting whether or not a pitch was put into play. There are 100,000 pitches (observations) thrown by Dodger's starting pitchers and 19 features of each pitch, including velocity, spin rate, and location. The binary response indiactes whether or not a pitch was put into play (0: not put into play, 1: put into play). Missing data was removed, leaving 99,254 observations with 18 covariates for analysis. The model parameters are estimated with data augmented Gibbs sampling following the algorithm described in @albertchib93 and implemented in R and traditional maximum likelihood estimation as implemented in the `glm` function in R [@Rstats]. Both Bayesian methods are run to generate 5000 posterior samples, with the first 1000 discarded as burn-in samples, leaving 4000 samples for analysis. We also attempted to fit a custom model in Stan but the samples were generated very slowly (fewer than 500 samples per hour). In contrast, the R model generated all 5000 samples in 15 miutes and 41 seconds.
+We evaluate the performance of data-augmented Gibbs sampling on a larger datasets (more predictors and observations than the breast cancer data), by fitting probit regression models on baseball data. The baseball data comes from Major League Baseball pitch tracking software and was prepared by the Los Angeles Dodgers for the purpose of predicting whether or not a pitch was put into play. There are 100,000 pitches (observations) thrown by Dodger's starting pitchers and 19 features of each pitch, including velocity, spin rate, and location. The binary response indicates whether or not a pitch was put into play (0: not put into play, 1: put into play). Missing data was removed, leaving 99,254 observations with 18 covariates for analysis. The model parameters are estimated with data augmented Gibbs sampling following the algorithm described in @albertchib93 and implemented in R and traditional maximum likelihood estimation as implemented in the `glm` function in R [@Rstats]. Both Bayesian methods are run to generate 5000 posterior samples, with the first 1000 discarded as burn-in samples, leaving 4000 samples for analysis. We also attempted to fit a custom model in Stan but the samples were generated very slowly (fewer than 500 samples per hour). In contrast, the R model generated all 5000 samples in 15 minutes and 41 seconds.
 
 <!-- R: 941.138 -->
 <!-- Stan: started at 5:28 -->
@@ -396,7 +397,7 @@ bb_gibbs_post <- read_rds(here("baseball", "baseball_samples.rds"))
 post_sample_summary(bb_gibbs_post) %>% 
   kable(caption = "Posterior sample summaries for baseball data using R-Gibbs")
 
-trace_plot(bb_gibbs_post) + ggtitle("Posterior Trace (Bawball Using R-Gibbs)")
+trace_plot(bb_gibbs_post) + ggtitle("Posterior Trace (Baseball Using R-Gibbs)")
 dist_plot(bb_gibbs_post) + ggtitle("Posterior Distribution (Baseball Using R-Gibbs)")
 ```
 
@@ -423,22 +424,18 @@ summary(bb_mle_est)$coefficients %>%
 
 <!-- There were 23 model parameters -->
 
-As we can see the MLE results and the results from the dat-augmented Gibbs Sampler is quite similar when comparing the mean and standard deivation estimates of the two methods. We can see from the traceplots that the Gibbs Sampler mixed well. 
+We note that the MLE results and the results from the data-augmented Gibbs Sampler is quite similar when comparing the mean and standard deviation estimates of the two methods. We can see from the trace plots that the Gibbs Sampler mixed well. 
 
 # Discussion
 <!-- (shortcomings of this new algorithm and how it can be improved). -->
 
-The data-augmented Gibbs sampling algorithms applied in this project largely performed well and the results were comparable to the Stan models. They were significanlty faster than the regression modesl implemented in Stan, which made analysis of the large baseball dataset feasible in a short amount of time, when it would have otherwise taken much longer. This model also mixed quite well, so infernce should be trusted with the Gibbs Sampler. The chief shortcoming of these methods is the poor mixing properties we observed with the Small-Cell Carcinoma data and the Breast Cancer data (although not as severe). Simulating much greater samples and using thinning did not lead to any improvement in mixing. Despite the poor mixing of the chains, the posterior means and medians closely aligned with the results observed in the Stan model and obtained with maximum likelihood estimation.
+The data-augmented Gibbs sampling algorithms applied in this project largely performed well and achieved comparable estimates to the Stan models, while running in significantly less time. The speed improvements were particularly impressive in the case of the baseball data, which enabled us to perform a Bayesian analysis when we would have otherwise not have had sufficient time. This model also mixed quite well, so inference should be trusted with the Gibbs Sampler. The chief shortcoming of these methods is the poor mixing properties we observed with the Small-Cell Carcinoma data and the Breast Cancer data (although not as severe). Simulating much greater samples and using thinning did not lead to any improvement in mixing. Despite the poor mixing of the chains, the posterior means and medians closely aligned with the results observed in the Stan model and obtained with maximum likelihood estimation.
 
-In addition the use of flat, improper priors may be of concern to some practioners. The data-augmented Gibbs Sampler can accommodate the use of specific priors, the only change is the ease of sampling. We do not have enough information regarding the slopes to set proper priors anyway. The use of improper simplified the sampling process, which is why they were used in this paper and are commonly used for regression. We even used improper priors in the Stan model.
+In addition the use of flat, improper priors may be of concern to some practitioners. The data-augmented Gibbs Sampler can accommodate the use of specific priors, but this can make the sampling more difficult. This was not a concern in our analysis, given that we are not subject matter experts in any of the applications we demonstrated here.
 
-Although the models described in @albertchib93 and demonstrated in this project remain popular to this day [@chakraborty2017], much works has been done to expand upon its foundation. Several papers have made efforts to apply the strategy described here to the logit model [@holmes2006; @Schnatter2010; @gramacy2012; @Polson2013] as wells as negative binomial regression [@NIPS2012_4567].
+Although the models described in @albertchib93 and demonstrated in this project remain popular to this day [@chakraborty2017], much work has been done to expand upon its foundation. Several papers have made efforts to apply the strategy described here to the logit model [@holmes2006; @Schnatter2010; @gramacy2012; @Polson2013] as wells as negative binomial regression [@NIPS2012_4567].
 
-Current research is being done to analyze baseball data as it pertains to pitcher changes and in-game decision making [@baseball1]. A hierarchical probit model is being used to estimate spline functions of how pitchers "age" while playing in a Major League Baseball game. This model was adapted from @baseball, which looked at players actually aging over their carrers, but uses a probit link instead of a logit link function. The probit link is being used in order to use data-augmented Gibbs Sampling for the sampling of the posterior distributions and for parameter estimation on the spline functions.
-
-*NEED AN END PARAGRAPH!!!!*
-
-
+Current research is being done to analyze baseball data as it pertains to pitcher changes and in-game decision making [@baseball1]. A hierarchical probit model is being used to estimate spline functions of how pitchers "age" while playing in a Major League Baseball game. This model was adapted from @baseball, which looked at players actually aging over their careers, but uses a probit link instead of a logit link function. The probit link is being used in order to use data-augmented Gibbs Sampling for the sampling of the posterior distributions and for parameter estimation on the spline functions.
 
 
 \pagebreak
