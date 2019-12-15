@@ -17,7 +17,7 @@ header-includes:
 \Input{$\vec{Y}$,$\textbf{X}$}
 \Output{Posterior Samples of Regression Coeffiecents, $\vec \beta$}
 \BlankLine
-Set Number of Samples (Total ($N_s$) and Burn-in) 
+Set Number of Samples (Total ($N_s$) and Burn-in)
 Initailize $\vec \beta^{(0)}$ \\
 Set $\Sigma = (X^TX)^{-1}$
 n = Number of Observations
@@ -32,13 +32,13 @@ n = Number of Observations
   }
   Regress $\vec Z$ onto $\textbf{X}$ to find $\vec \beta_Z$ \\
   Sample $\beta^{(k)}|\vec Z$ from $\mathcal{N}(\hat{\vec \beta_Z}^{(k)}, \textbf{$\Sigma$})$
-  
-  
+
+
 }
 \end{algorithm}
-  
-  
-  
+
+
+
 \begin{algorithm}[H]
 \caption{Tobit Regression Using Gibbs Sampler with Data Augmentation ($\nu =8$)}
 \DontPrintSemicolon
@@ -48,7 +48,7 @@ n = Number of Observations
 \Output{Posterior Samples of Regression Coeffiecents, $\vec \beta$}
 \BlankLine
 Set Number of Samples (Total ($N_s$) and Burn-in) \\
-n = Number of Observations \\ 
+n = Number of Observations \\
 Initailize $\vec \beta^{(0)}$ and set $\lambda = \vec 1_n$ \\
 $\nu=8$
 \BlankLine
@@ -67,4 +67,35 @@ $\nu=8$
   Sample $\beta^{(k)}|\vec Z,\vec \lambda,\vec Y \nu$ from $\mathcal{N}(\hat{\vec \beta_Z}^{(k)}, \textbf{$\Sigma$})$ \\
   Sample $\lambda_i$ from $\Gamma\left(\frac{\nu+1}{2},\frac{\nu+(Z_i-x_i^T\beta)^2}{2}\right)$
 }
-\end{algorithm} 
+\end{algorithm}
+
+
+
+
+
+
+\begin{algorithm}[H]
+\caption{Ordered Multinomial Probit Regression Using Gibbs Sampler with Data Augmentation}
+\DontPrintSemicolon
+\SetAlgoLined
+\SetKwInOut{Input}{Input}\SetKwInOut{Output}{Output}
+\Input{$\vec{Y}$,$\textbf{X}$}
+\Output{Posterior Samples of Regression Coeffiecents, $\vec \beta$ and $\vec \gamma$}
+\BlankLine
+Set Number of Samples (Total ($N_s$) and Burn-in) \\
+n = Number of Observations \\ 
+Initailize $\vec \beta^{(0)}$ and $\vec \gamma^{(0)}$ as the MLE \\
+
+\BlankLine
+\For{k = 1 to $N_s$}{
+  Sample $\vec \gamma_j$ from $Uniform(max(max(Z_i:Y_i = j),\gamma_{j-1}^{(k-1)},min(min(Z_i:Y_i = j+1),\gamma_{j+1}^{(k-1)}))$
+  
+  \For{i = 1 to n}{
+        Sample $z_i^{(k)}|\vec \beta,\vec \gamma, y_i=j$ from trunc$\mathcal{N}$($x_i^T\beta^{(k-1)}$,1,$\gamma_{j-1},\gamma_j$)
+    }
+  Set $\Sigma = (X^TX)^{-1}$ \\
+  Set $\vec \beta_Z = \Sigma X^TZ$ \\
+  \BlankLine
+    Sample $\beta^{(k)}|\vec Z,\vec \gamma,\vec Y$ from $\mathcal{N}(\hat{\vec \beta_Z}^{(k)}, \textbf{$\Sigma$})$
+}
+\end{algorithm}

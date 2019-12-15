@@ -167,11 +167,56 @@ $\nu=8$
 
 ## Multinomial
 
-The previous two data augmentation Gibbs samplers tackled regression models where the response is binary. Data augmentation Gibbs samplers can also be applied to multinomial response variables. Although there are approaches for both ordered and unordered categories, we will focus on the case of ordered categories. Once again, using a probit model will simplify the conditional posterior distributions. Before discussing the alogrithm in depth, we present the ordered multinomial probit model for which we will use Gibbs Sampling to fit. This model
+The previous two data augmentation Gibbs samplers tackled regression models where the response is binary. Data augmentation Gibbs samplers can also be applied to multinomial response variables. Although there are approaches for both ordered and unordered categories, we will focus on the case of ordered categories. Once again, using a probit model will simplify the conditional posterior distributions. Before discussing the alogrithm in depth, we present the ordered multinomial probit [@aitchison1957;@gurland1960;@mccullagh1980] model for which we will use Gibbs Sampling to fit.
 
+
+\begin{equation}
+Y_i|\vec x_i, \beta \sim Multinomial(p_{ij})
+\end{equation}
+for $i = 1,..., n$ and $j = 1,..., J-1$.
+
+\begin{equation}
+p_{ij} = \Phi(\gamma_j - \vec x_i^T \vec \beta)
+\end{equation}
+
+\begin{equation}
+\vec \gamma, \vec \beta \sim \pi(\vec \beta, \vec \gamma)
+\end{equation}
+
+where $\pi(\vec \beta, \vec \gamma)$ is the prior on the regression coeffeicents. We will assume to be non-informative as is commonly done in analysis. 
+
+Similar to the binary case, a latent variable $\vec Z = (Z_1,...Z_n)$ is introduced making it possible to simulate from a joint posterior. Further, we can marginalize over $\vec Z$ to find the posterior distribution of $\beta|\vec{Z},\vec{Y},\vec \gamma$, which is the same multivarite normal distribution as the binary case, and the conditional posterior of $\vec \gamma|\vec{Z},\vec{Y}, \vec \beta$. This Gibbs sampler requires only sampling from truncated normal distributions, a multivarite distribution, and a unifrom distribution. [@albertchib93] The algorithm below presents, in detail, the sampling mechanism of this data augmentation Gibbs Sampler. 
 
 
 ### Algorithm:
+
+
+\begin{algorithm}[H]
+\caption{Ordered Multinomial Probit Regression Using Gibbs Sampler with Data Augmentation}
+\DontPrintSemicolon
+\SetAlgoLined
+\SetKwInOut{Input}{Input}\SetKwInOut{Output}{Output}
+\Input{$\vec{Y}$,$\textbf{X}$}
+\Output{Posterior Samples of Regression Coeffiecents, $\vec \beta$ and $\vec \gamma$}
+\BlankLine
+Set Number of Samples (Total ($N_s$) and Burn-in) \\
+n = Number of Observations \\ 
+Initailize $\vec \beta^{(0)}$ and $\vec \gamma^{(0)}$ as the MLE \\
+
+\BlankLine
+\For{k = 1 to $N_s$}{
+  Sample $\vec \gamma_j$ from $Uniform(max(max(Z_i:Y_i = j),\gamma_{j-1}^{(k-1)},min(min(Z_i:Y_i = j+1),\gamma_{j+1}^{(k-1)}))$
+  
+  \For{i = 1 to n}{
+        Sample $z_i^{(k)}|\vec \beta,\vec \gamma, y_i=j$ from trunc$\mathcal{N}$($x_i^T\beta^{(k-1)}$,1,$\gamma_{j-1},\gamma_j$)
+    }
+  Set $\Sigma = (X^TX)^{-1}$ \\
+  Set $\vec \beta_Z = \Sigma X^TZ$ \\
+  \BlankLine
+    Sample $\beta^{(k)}|\vec Z,\vec \gamma,\vec Y$ from $\mathcal{N}(\hat{\vec \beta_Z}^{(k)}, \textbf{$\Sigma$})$
+}
+\end{algorithm}
+
 
 ## Implementation in Stan (NUTS)
 
