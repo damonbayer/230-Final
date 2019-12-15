@@ -131,7 +131,7 @@ Where $\text{logit}(p) = \frac{p}{1-p}$
 
 The T-link is an extension of the probit regression model because instead of using the normal cdf (as in the probit model) we use the t-distribution cdf as our link function. If we replace $\Phi$ with the cdf of the t($\nu$) in (2), we would have Bayesian t-link model. By generalizing the model, we can now choose a degrees of freedom, $\nu$ where t($\nu$) better fits out model and thus a link function that approximates other well-known link functions. For example, we are usually concerned with logistic regression because of the interpretability of the coefficients into odds ratios. The flexibility of the t-link function allows us to draw from a posterior distribution of $\vec \beta$ that is approximately the posterior distribution if we had chosen to use the logit link function. Note that if we set the degrees of freedom equal to infinity, we would revert back to the probit model [@albertchib93]. 
 
-According to Albert and Chib, a t-distribution with a degrees of freedom of 8 is a fairly close approximation of the logistic regression model, once a correction factor of 0.634 is taken into account [@albertchib93].
+A t-distribution with a degrees of freedom of 8 is a fairly close approximation of the logistic regression model, once a correction factor of 0.634 is taken into account [@albertchib93].
 
 To implement this link function, we must introduce a second set of latent variables, $\lambda_i$. This variable is introduced to simulate the heavier tales of the t-distribution compared to the normal distribution. Our implementation is slightly different from Albert and Chib's because of the ability to sample from a truncated t distribution and issues implementing their algorithm. We still need to simulate $\lambda$ in order to sample from the conditional posterior of $\beta^{(k)}|\vec Z, \vec Y, \lambda, \nu$. We took the degrees of freedom equal to 8 to campare results to the logistic regression model. You could sample from the posterior distribution of $\nu$ and better understand how well your model fits the data, but we choose to focus on logistic regression. 
 
@@ -276,9 +276,9 @@ suppressMessages(summary(multinomial_mle_est)) %>%
   kable(caption = "MLE estimates for small-cell carcinoma data")
 ```
 
-For this set of data, the results from the three models are fairly simliar. The Gibbs Sampler and the Stan models are slightly different (more so than the succeding data sets) from eachother for the three distributions on $\gamma$'s. This is probably to issues of mixing for the data augmented Gibbs Sampler. The Traceplots are show above do not provide evidence of mixing. We can also see strange shaped posterior distrbutions. This issues will be further discussed in Section 5. 
+For this set of data, the results from the three models are fairly simliar. The Gibbs Sampler and the Stan models are slightly different (more so than the succeding data sets) from eachother for the three distributions on $\gamma$'s. This is probably to issues of mixing for the data augmented Gibbs Sampler. The trace plots show above do not provide evidence of mixing. We also note asymmetric posterior distrbutions. This issues will be further discussed in Section 5. 
 
-## Breast Cancer Data
+## Breast Cancer
 
 ### Probit Regression
 
@@ -286,17 +286,17 @@ We evaluate the probit regression methods with the Wisconsin Breast Cancer datas
 
 <!-- 310.555 -->
 
-```{r Breast Cancer R}
+```{r Breast Cancer R Probit}
 bc_gibbs_post <- read_rds(here("Breast Cancer", "gibbs_samples_bc.rds"))
 post_sample_summary(bc_gibbs_post) %>% 
-  kable(caption = "Posterior sample summaries for breast cancer data using R-Gibbs")
+  kable(caption = "Posterior sample summaries for breast cancer data using R-Gibbs and probit link")
 
-trace_plot(bc_gibbs_post) + ggtitle("Posterior Trace (Breast Cancer Using R-Gibbs)")
-dist_plot(bc_gibbs_post) + ggtitle("Posterior Distribution (Breast Cancer Using R-Gibbs)")
+trace_plot(bc_gibbs_post) + ggtitle("Posterior Trace (Breast Cancer Using R-Gibbs and probit link)")
+dist_plot(bc_gibbs_post) + ggtitle("Posterior Distribution (Breast Cancer Using R-Gibbs and probit link)")
 ```
 
 
-```{r Breast Cancer Stan}
+```{r Breast Cancer Stan Probit}
 bc_stan_post <- read_rds(here("Breast Cancer", "stan_samples_bc.rds")) %>% 
   as.matrix() %>% 
   as_tibble() %>% 
@@ -304,15 +304,15 @@ bc_stan_post <- read_rds(here("Breast Cancer", "stan_samples_bc.rds")) %>%
   `colnames<-`(names(bc_gibbs_post))
   
 post_sample_summary(bc_stan_post) %>%
-  kable(caption = "Posterior sample summaries for breast cancer data using Stan")
+  kable(caption = "Posterior sample summaries for breast cancer data using Stan and probit link")
 
-trace_plot(bc_stan_post) + ggtitle("Posterior Trace (Breast Cancer Using Stan)")
-dist_plot(bc_stan_post) + ggtitle("Posterior Distribution (Breast Cancer Using Stan)")
+trace_plot(bc_stan_post) + ggtitle("Posterior Trace (Breast Cancer Using Stan and probit link)")
+dist_plot(bc_stan_post) + ggtitle("Posterior Distribution (Breast Cancer Using Stan and probit link)")
 ```
 
 
 
-```{r Breast Cancer MLE, warning=FALSE}
+```{r Breast Cancer MLE Probit, warning=FALSE}
 dat_bc <- read_csv(here("Breast Cancer", "breast-cancer-wisconsin.data"),
                 col_names = c('Sample code number',
                               'Clump Thickness',
@@ -336,14 +336,53 @@ summary(bc_mle_est)$coefficients %>%
   rownames_to_column("Variable") %>% 
   as_tibble() %>% 
   select("Variable", "Estimate", "Std. Error") %>% 
-  kable(caption = "MLE estimates for breast cancer data")
+  kable(caption = "MLE estimates for breast cancer data and probit link")
 ```
 
 We can see that the probit regression model for this data garnered very similar results from all three methods. We can see that the Stan model mixed better than the Gibbs Sampler, but the posterior distributions are very similar. Once again, The mixing issues with the data-augmented Gibbs Sampler will be discussed in greater detail in Section 5. 
 
-### Tobit/Logistic Regression 
+### T-Link/Logistic Regression 
 
-We will now run the same analysis using the t-link with eight degrees of freedom and the logistic regression model run in Stan. 
+We now run the same analysis using the t-link with eight degrees of freedom, the logistic regression model run in Stan and traditional maximum likelihood estimation as implemented in the `glm` function in R [@Rstats]. Each sample from the t-link model is divided by 0.634 to make comparisons to the logistic models. Both Bayesian methods are run to generate 6000 posterior samples, with the first 2000 discarded as burn-in samples, leaving 4000 samples for analysis. The Stan model took 6 minutes and 55.7 seconds seconds to run, while the R model completed in 49.3 seconds.
+
+```{r Breast Cancer R t-link}
+bc_gibbs_post_logit <- read_rds(here("Breast Cancer", "gibbs_logit_bc.rds")) / 0.634
+post_sample_summary(bc_gibbs_post_logit) %>% 
+  kable(caption = "Posterior sample summaries for breast cancer data using R-Gibbs and t-link")
+
+trace_plot(bc_gibbs_post_logit) + ggtitle("Posterior Trace (Breast Cancer Using R-Gibbs  and t-link)")
+dist_plot(bc_gibbs_post_logit) + ggtitle("Posterior Distribution (Breast Cancer Using R-Gibbs  and t-link)")
+```
+
+
+```{r Breast Cancer Stan t-link}
+bc_stan_post_logit <- read_rds(here("Breast Cancer", "stan_samples_logit.rds")) %>% 
+  as.matrix() %>% 
+  as_tibble() %>% 
+  select(-lp__) %>% 
+  `colnames<-`(names(bc_gibbs_post))
+  
+post_sample_summary(bc_stan_post_logit) %>%
+  kable(caption = "Posterior sample summaries for breast cancer data using Stan and logit link")
+
+trace_plot(bc_stan_post_logit) + ggtitle("Posterior Trace (Breast Cancer Using Stan and logit link)")
+dist_plot(bc_stan_post_logit) + ggtitle("Posterior Distribution (Breast Cancer Using Stan and logit link)")
+```
+
+
+
+```{r Breast Cancer MLE t-link,  warning=FALSE}
+bc_mle_est_logit <- glm(Class ~ ., family = binomial, data = dat_bc)
+
+summary(bc_mle_est_logit)$coefficients %>% 
+  as.data.frame() %>% 
+  rownames_to_column("Variable") %>% 
+  as_tibble() %>% 
+  select("Variable", "Estimate", "Std. Error") %>% 
+  kable(caption = "MLE estimates for breast cancer data and logit link")
+```
+
+We note that the transformed t-link point estimates closesly match the Stan model coefficients as well as the maximum likelihood estimates. The Gibbs sample trace plot exhibit strong autocoreelation in some plots, but the posterior distributions look fairly normal. There are no obvious problems with the posterior distributions generated with the Stan model.
 
 ## Baseball
 
@@ -412,3 +451,5 @@ Current research is being done to analyze baseball data as it pertains to pitche
 \pagebreak
 
 # Appendix
+
+All code for this analysis is available in our GitHub repository: https://github.com/damonbayer/230-Final

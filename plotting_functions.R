@@ -2,6 +2,7 @@ trace_plot <- function(data) {
   data %>% 
     pivot_longer(cols = everything()) %>% 
     mutate(name = as_factor(name)) %>% 
+    group_by(name) %>% 
     mutate(t = row_number()) %>% 
     ggplot(aes(x = t, y = value, color = name)) +
     facet_wrap(. ~ name, scales = "free", labeller = label_parsed) +

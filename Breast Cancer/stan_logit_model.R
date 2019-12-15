@@ -22,7 +22,7 @@ model {
 '
 
 
-dat <- read_csv(here("Data", "breast-cancer-wisconsin.data"),
+dat <- read_csv(here("Breast Cancer", "breast-cancer-wisconsin.data"),
                 col_names = c('Sample code number',
                               'Clump Thickness',
                               'Uniformity of Cell Size',
@@ -34,14 +34,14 @@ dat <- read_csv(here("Data", "breast-cancer-wisconsin.data"),
                               'Normal Nucleoli',
                               'Mitoses',
                               'Class'), na = '?') %>% 
-  na.omit() %>% 
-  select(-'Sample code number') %>% 
+  select(-'Sample code number', -'Bare Nuclei') %>% 
   mutate(Class = Class / 2 - 1)
 
-X <- model.matrix(Class ~ ., data = dat)
+
+X <- model.matrix(Class ~ ., data=dat)
 y <- dat$Class
 
-N <-dim(X)[1]
+N <- dim(X)[1]
 K <- dim(X)[2]
 
 
@@ -50,9 +50,12 @@ options(mc.cores = parallel::detectCores())  ## local multicore CPUs
 dat = list(N=N, K=K, X=X,y=y)
 model.stan = stan_model(model_code=model_string)
 r = sampling(model.stan, dat, chains = 1, iter = 6000, warmup =2000, init = "0")
-write_rds(x = r, path = "~/Documents/STATS 230/230-Final/stan_samples_logit.rds")
 
-readRDS("~/Documents/STATS 230/230-Final/stan_samples_logit.rds")
+write_rds(r, here("Breast Cancer", "stan_samples_logit.rds"))
+
+r <- read_rds(here("Breast Cancer", "stan_samples_logit.rds"))
+
+
 summary(r)$summary
 samples <- as.matrix(r)[,-10]
 

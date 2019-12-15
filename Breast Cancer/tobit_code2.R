@@ -9,7 +9,7 @@ log_sum_exp <- function(values) {
   max_val <- max(values)
   max_val + log(sum(exp(values - max_val)))
 }
-dat <- read_csv(here("Data", "breast-cancer-wisconsin.data"),
+dat <- read_csv(here("Breast Cancer", "breast-cancer-wisconsin.data"),
                 col_names = c('Sample code number',
                               'Clump Thickness',
                               'Uniformity of Cell Size',
@@ -21,8 +21,7 @@ dat <- read_csv(here("Data", "breast-cancer-wisconsin.data"),
                               'Normal Nucleoli',
                               'Mitoses',
                               'Class'), na = '?') %>% 
-  na.omit() %>% 
-  select(-'Sample code number') %>% 
+  select(-'Sample code number', -'Bare Nuclei') %>% 
   mutate(Class = Class / 2 - 1)
 
 # dat <- sample_n(dat, 20)
@@ -56,7 +55,7 @@ generate_Z <- function(y, X, beta,lambda) {
 c_func <- function(nu)   1 / (gamma(nu / 2) * (nu / 2)^(nu / 2))
 
 n_samp <- 6000
-n_burnin <- 4000
+n_burnin <- 2000
 
 # nu_choices <- c(4, 8, 16, 32)
 nu_choices <- 10^(2:5)
@@ -75,7 +74,8 @@ augmented_data <- dat %>%
   mutate(lambda = 1)
 
 set.seed(230)
-i <- 3
+
+rbenchmark::benchmark(
 for (i in 2:n_samp){
   print(i)
   #generate z
@@ -105,11 +105,13 @@ for (i in 2:n_samp){
   
   nu[i] <- nu_choices[sample(x = length(nu_choices), size = 1, prob = post_normalized)]
   # nu[i] <- nu[i-1]
-}
+}, replications = 0)
 
 beta_post <- beta[(n_burnin+1):n_samp,] %>% 
   as_tibble()
 
+
+write_rds(beta_post, here("Breast Cancer", "gibbs_logit_bc.rds"))
 
 beta_post %>% 
   pivot_longer(cols = everything()) %>% 
