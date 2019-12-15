@@ -276,9 +276,11 @@ suppressMessages(summary(multinomial_mle_est)) %>%
   kable(caption = "MLE estimates for small-cell carcinoma data")
 ```
 
-
+For this set of data, the results from the three models are fairly simliar. The Gibbs Sampler and the Stan models are slightly different (more so than the succeding data sets) from eachother for the three distributions on $\gamma$'s. This is probably to issues of mixing for the data augmented Gibbs Sampler. The Traceplots are show above do not provide evidence of mixing. We can also see strange shaped posterior distrbutions. This issues will be further discussed in Section 5. 
 
 ## Breast Cancer Data
+
+### Probit Regression
 
 We evaluate the probit regression methods with the Wisconsin Breast Cancer dataset, obtained from the University of Wisconsin Hospitals, Madison from Dr. William H. Wolberg [@wolberg1990multisurface]. The data reports 9 discrete measurements for 699 observations of clumps of breast cancer cells as well as the response variable, indicating whether or not the clump is malignant (1) or benign (0). The variables are Clump Thickness, Uniformity of Cell Size, Uniformity of Cell Shape, Marginal Adhesion, Single Epithelial Cell Size, Bare Nuclei, Bland Chromatin, Normal Nucleoli, and Mitoses. Only the Bare Nuclei variable included any missing data, so it was not included in this analysis. The model parameters are estimated with data-augmented Gibbs sampling following the algorithm described in @albertchib93 and implemented in R, a custom model built in Stan, and traditional maximum likelihood estimation as implemented in the `glm` function in R [@Rstats]. Both Bayesian methods are run to generate 4000 posterior samples, with the first 1000 discarded as burn-in samples, leaving 3000 samples for analysis. The Stan model took 6 minutes and 10.5 seconds seconds to run, while the R model completed in 7.8 seconds.
 
@@ -309,6 +311,7 @@ dist_plot(bc_stan_post) + ggtitle("Posterior Distribution (Breast Cancer Using S
 ```
 
 
+
 ```{r Breast Cancer MLE, warning=FALSE}
 dat_bc <- read_csv(here("Breast Cancer", "breast-cancer-wisconsin.data"),
                 col_names = c('Sample code number',
@@ -336,7 +339,11 @@ summary(bc_mle_est)$coefficients %>%
   kable(caption = "MLE estimates for breast cancer data")
 ```
 
+We can see that the probit regression model for this data garnered very similar results from all three methods. We can see that the Stan model mixed better than the Gibbs Sampler, but the posterior distributions are very similar. Once again, The mixing issues with the data-augmented Gibbs Sampler will be discussed in greater detail in Section 5. 
 
+### Tobit/Logistic Regression 
+
+We will now run the same analysis using the t-link with eight degrees of freedom and the logistic regression model run in Stan. 
 
 ## Baseball
 
@@ -374,9 +381,10 @@ summary(bb_mle_est)$coefficients %>%
   select("Variable", "Estimate", "Std. Error") %>% 
   kable(caption = "MLE estimates for baseball data")
 ```
+
 <!-- There were 23 model parameters -->
 
-
+As we can see the MLE results and the results from the dat-augmented Gibbs Sampler is quite similar when comparing the mean and standard deivation estimates of the two methods. We can see from the traceplots that the Gibbs Sampler mixed well. 
 
 # Discussion
 <!-- (shortcomings of this new algorithm and how it can be improved). -->
